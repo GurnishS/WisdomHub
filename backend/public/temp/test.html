@@ -1,0 +1,58 @@
+<!doctype html>
+ 
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My PDF Viewer</title>
+  <script 
+src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.0.943/pdf.min.js">
+  </script>
+</head>
+<body>
+     <div id="my_pdf_viewer" style="width: 100px;">
+        <div id="canvas_container" style="width: 100px;">
+            <canvas id="pdf_renderer" style="width: 100px;"></canvas>
+        </div>
+    </div>
+    <script>
+        var myState = {
+            pdf: null,
+            currentPage: 1,
+            zoom:1,
+        }
+     
+        pdfjsLib.getDocument('https://res.cloudinary.com/dh22eqe5d/image/upload/v1718720010/mvntkp6xpu4o1aezx22m.pdf').then((pdf) => {
+     
+            myState.pdf = pdf;
+            render();
+        });
+        function render() {
+            myState.pdf.getPage(myState.currentPage).then((page) => {
+         
+                var canvas = document.getElementById("pdf_renderer");
+                var ctx = canvas.getContext('2d');
+     
+                var viewport = page.getViewport(myState.zoom);
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+         
+                page.render({
+                    canvasContext: ctx,
+                    viewport: viewport
+                }).promise.then(() => {
+                    // Convert canvas to PNG image
+                    var canvas = document.getElementById("pdf_renderer");
+                    var image = canvas.toDataURL("image/png");
+
+                    // Save the image
+                    var link = document.createElement('a');
+                    link.href = image;
+                    link.download = 'my_pdf_image.png';
+                    link.click();
+                });
+            });
+        }
+    </script>
+</body>
+</html>
