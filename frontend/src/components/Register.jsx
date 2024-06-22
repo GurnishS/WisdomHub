@@ -1,7 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 
 export default function RegisterForm() {
+  const [user, setUser] = useState(null); // State to hold user data
+
+  useEffect(() => {
+    fetch("http://localhost:8000/api/v1/users/current-user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include", // Include cookies
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setUser(data);
+        window.location.href = "/dashboard";
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
+
   const [formData, setFormData] = useState({
     avatar: null,
     username: "",
@@ -66,7 +86,7 @@ export default function RegisterForm() {
             <p className="mt-2 text-base text-gray-600">
               Already have an account?{" "}
               <a
-                href="#"
+                href="/login"
                 className="font-medium text-black transition-all duration-200 hover:underline"
               >
                 Sign In
