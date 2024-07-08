@@ -31,14 +31,16 @@ const questionPaperSchema = new Schema(
       type: Number,
       default: 0,
     },
-    likes: {
-      type: Number,
-      default: 0,
-    },
     pdfLink: {
       type: String,
       required: true,
     },
+    likes: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     comments: [
       {
         type: Schema.Types.ObjectId,

@@ -1,5 +1,9 @@
 import { Router } from "express";
 import {
+  getBooks,
+  getQuestionPaper,
+  getStudyMaterial,
+  likeItem,
   uploadBook,
   uploadQuestionPaper,
   uploadStudyMaterial,
@@ -34,4 +38,11 @@ router
     upload.fields([{ name: "studyMaterial", maxCount: 1 }]),
     uploadStudyMaterial
   );
+
+router.route("/like").post(verifyJWT, likeItem);
+router.route("/get-books").get(getBooks);
+router.route("/get-question-papers").get(getQuestionPaper);
+router.route("/get-study-materials").get(getStudyMaterial);
+router.route("/get-question-papers").get(getQuestionPaper);
+
 export default router;

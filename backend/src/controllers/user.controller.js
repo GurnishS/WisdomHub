@@ -4,6 +4,9 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
+import { Book } from "./../models/book.model.js";
+import { QuestionPaper } from "./../models/questionPaper.model.js";
+import { StudyMaterial } from "../models/studyMaterial.model.js";
 
 const generateAccessAndRefereshTokens = async (userId) => {
   try {
@@ -253,10 +256,17 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 });
 
 const getUserProfile = asyncHandler(async (req, res) => {
-  const { username } = req.params;
+  let username;
+  if (req.params.username) {
+    username = req.params.username;
+  } else {
+    username = req.user.username;
+  }
+
   if (!username?.trim()) {
     throw new ApiError(400, "Username is missing");
   }
+
   const userProfile = await User.aggregate([
     {
       $match: {
@@ -290,8 +300,6 @@ const getUserProfile = asyncHandler(async (req, res) => {
             else: false,
           },
         },
-        then: true,
-        else: false,
       },
     },
     {
@@ -299,7 +307,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
         fullName: 1,
         username: 1,
         avatar: 1,
-        followerCountCount: 1,
+        followerCount: 1,
         followingCount: 1,
         isFollowing: 1,
         email: 1,
@@ -308,9 +316,25 @@ const getUserProfile = asyncHandler(async (req, res) => {
       },
     },
   ]);
+
+  if (!userProfile.length) {
+    throw new ApiError(404, "User not found");
+  }
+  const user = userProfile[0];
+
+  const books = await Book.find({ uploadedBy: user._id });
+  const questionPapers = await QuestionPaper.find({ uploadedBy: user._id });
+  const studyMaterials = await StudyMaterial.find({ uploadedBy: user._id });
+
   return res
     .status(200)
-    .json(new ApiResponse(200, userProfile, "User profile"));
+    .json(
+      new ApiResponse(
+        200,
+        { userProfile, items: { questionPapers, studyMaterials, books } },
+        "User profile"
+      )
+    );
 });
 
 const followUser = asyncHandler(async (req, res) => {
@@ -395,4 +419,45 @@ const getRecentItems = asyncHandler(async (req, res) => {
     );
 });
 
-export { registerUser, loginUser, logoutUser, getCurrentUser };
+const checkUsernameExists = asyncHandler(async (req, res) => {
+  const { username } = req.body;
+  const user = await User.findOne({ username });
+  if (user) {
+    return res.status(200).json(new ApiResponse(200, true, "Username exists"));
+  }
+  return res
+    .status(200)
+    .json(new ApiResponse(200, false, "Username does not exist"));
+});
+
+const getUploadedItems = asyncHandler(async (req, res) => {
+  const { username } = req.body;
+  const user = await User.findOne({ username });
+  if (!user) {
+    return res
+      .status(404)
+      .json(new ApiResponse(404, false, "Username does not exist"));
+  }
+
+  const books = await Book.find({ uploadedBy: user._id });
+  const questionPapers = await QuestionPaper.find({ uploadedBy: user._id });
+  const studyMaterials = await StudyMaterial.find({ uploadedBy: user._id });
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { questionPapers, studyMaterials, books },
+        "User Items"
+      )
+    );
+});
+
+export {
+  registerUser,
+  loginUser,
+  logoutUser,
+  getCurrentUser,
+  checkUsernameExists,
+  getUserProfile,
+};

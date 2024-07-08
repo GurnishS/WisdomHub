@@ -3,6 +3,9 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { Book } from "../models/book.model.js";
+import { User } from "../models/user.model.js";
+import { StudyMaterial } from "../models/studyMaterial.model.js";
+import { QuestionPaper } from "../models/questionPaper.model.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 // Define the uploadBook handler function
@@ -157,4 +160,175 @@ const uploadStudyMaterial = asyncHandler(async (req, res, file) => {
   }
 });
 
-export { uploadBook, uploadQuestionPaper, uploadStudyMaterial };
+const likeItem = asyncHandler((req, res) => {
+  const { id, type } = req.body;
+  const user = req.user;
+  if (!user) {
+    throw new ApiError(401, "You must be logged In to like an item");
+  }
+  let model;
+  switch (type) {
+    case "book":
+      model = Book;
+      break;
+    case "questionPaper":
+      model = QuestionPaper;
+      break;
+    case "studyMaterial":
+      model = StudyMaterial;
+      break;
+    default:
+      throw new ApiError(400, "Invalid type");
+  }
+  model
+    .findById(id)
+    .then((item) => {
+      if (!item) {
+        throw new ApiError(404, "Item not found");
+      }
+      if (item.likes.includes(user._id)) {
+        item.likes.pull(user._id);
+      } else {
+        item.likes.push(user._id);
+      }
+      return item.save();
+    })
+    .then((item) => {
+      return res.status(200).json(new ApiResponse(200, item, "Success"));
+    })
+    .catch((error) => {
+      console.error("Error liking item:", error);
+      throw new ApiError(500, "Something went wrong while liking item");
+    });
+});
+
+const getBooks = asyncHandler(async (req, res) => {
+  try {
+    // Fetch all books
+    const books = await Book.find();
+
+    // Extract all unique user IDs from books
+    const userIds = [...new Set(books.map((book) => book.uploadedBy))];
+
+    // Fetch all users corresponding to the userIds and select only username and avatar
+    const users = await User.find({ _id: { $in: userIds } }).select(
+      "username avatar fullName"
+    );
+
+    // Map users to a map for quick lookup
+    const userMap = users.reduce((acc, user) => {
+      acc[user._id] = user;
+      return acc;
+    }, {});
+
+    // Map each book to include the corresponding user's username and avatar
+    const booksWithUsers = books.map((book) => ({
+      ...book.toObject(),
+      userId: book.uploadedBy, // Assuming you also want to keep the uploadedBy ID
+      username: userMap[book.uploadedBy].username,
+      avatar: userMap[book.uploadedBy].avatar,
+      fullName: userMap[book.uploadedBy].fullName,
+    }));
+
+    // Respond with the modified books array
+    return res
+      .status(200)
+      .json(new ApiResponse(200, booksWithUsers, "Success"));
+  } catch (error) {
+    console.error("Error getting books:", error);
+    throw new ApiError(500, "Something went wrong while getting books");
+  }
+});
+
+const getStudyMaterial = asyncHandler(async (req, res) => {
+  try {
+    // Fetch all study materials
+    const studyMaterials = await StudyMaterial.find();
+
+    // Extract all unique user IDs from studyMaterials
+    const userIds = [
+      ...new Set(studyMaterials.map((material) => material.uploadedBy)),
+    ];
+
+    // Fetch all users corresponding to the userIds and select only necessary fields
+    const users = await User.find({ _id: { $in: userIds } }).select(
+      "username avatar fullName"
+    );
+
+    // Map users to a map for quick lookup
+    const userMap = users.reduce((acc, user) => {
+      acc[user._id] = user;
+      return acc;
+    }, {});
+
+    // Map each study material to include the corresponding user's username and avatar
+    const studyMaterialsWithUsers = studyMaterials.map((material) => ({
+      ...material.toObject(),
+      userId: material.uploadedBy,
+      username: userMap[material.uploadedBy].username,
+      avatar: userMap[material.uploadedBy].avatar,
+      fullName: userMap[material.uploadedBy].fullName,
+    }));
+
+    // Respond with the modified study materials array
+    return res
+      .status(200)
+      .json(new ApiResponse(200, studyMaterialsWithUsers, "Success"));
+  } catch (error) {
+    console.error("Error getting studyMaterial:", error);
+    throw new ApiError(500, "Something went wrong while getting studyMaterial");
+  }
+});
+
+const getQuestionPaper = asyncHandler(async (req, res) => {
+  try {
+    // Fetch all question papers
+    const questionPapers = await QuestionPaper.find();
+
+    // Extract all unique user IDs from questionPapers
+    const userIds = [
+      ...new Set(questionPapers.map((paper) => paper.uploadedBy)),
+    ];
+
+    // Fetch all users corresponding to the userIds and select only username and avatar
+    const users = await User.find({ _id: { $in: userIds } }).select(
+      "username avatar fullName"
+    );
+
+    // Map users to a map for quick lookup
+    const userMap = users.reduce((acc, user) => {
+      acc[user._id] = user;
+      return acc;
+    }, {});
+
+    // Map each question paper to include the corresponding user's username and avatar
+    const questionPapersWithUsers = questionPapers.map((paper) => ({
+      ...paper.toObject(),
+      userId: paper.uploadedBy,
+      username: userMap[paper.uploadedBy].username,
+      avatar: userMap[paper.uploadedBy].avatar,
+      fullName: userMap[paper.uploadedBy].fullName,
+    }));
+
+    // Respond with the modified question papers array
+    return res
+      .status(200)
+      .json(new ApiResponse(200, questionPapersWithUsers, "Success"));
+  } catch (error) {
+    console.error("Error getting questionPapers:", error);
+    throw new ApiError(
+      500,
+      "Something went wrong while getting questionPapers"
+    );
+  }
+});
+
+export {
+  uploadBook,
+  uploadQuestionPaper,
+  uploadStudyMaterial,
+  likeItem,
+  getBooks,
+  getQuestionPaper,
+  getStudyMaterial,
+};

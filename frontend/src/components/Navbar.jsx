@@ -10,23 +10,25 @@ import {
   Transition,
 } from "@headlessui/react";
 import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import UploadForm from "./UploadForm.jsx";
+import config from "../config.js";
 
 const navigation = [
-  { name: "Dashboard", href: "#", current: true },
-  { name: "Question Papers", href: "#", current: false },
-  { name: "Books", href: "#", current: false },
-  { name: "Study Materials", href: "#", current: false },
+  { name: "Dashboard" },
+  { name: "Question Papers" },
+  { name: "Books" },
+  { name: "Study Materials" },
 ];
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
-export default function Example() {
+export default function Example({ currentPage, setCurrentPage }) {
+  const [modalOpen, setModalOpen] = useState(false);
   const [user, setUser] = useState(null); // State to hold user data
-
   useEffect(() => {
-    fetch("http://localhost:8000/api/v1/users/current-user", {
+    fetch(config.apiUrl + "users/current-user", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -43,7 +45,7 @@ export default function Example() {
   }, []);
 
   const logout = () => {
-    fetch("http://localhost:8000/api/v1/users/logout", {
+    fetch(config.apiUrl + "users/logout", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -53,7 +55,6 @@ export default function Example() {
       .then((res) => res.json())
       .then((data) => {
         console.log(data);
-        alert("You are about to be logged out");
         window.location.href = "/login";
         // Update user state with fetched data
       })
@@ -63,9 +64,10 @@ export default function Example() {
   };
 
   return (
-    <Disclosure as="nav" className="bg-gray-800">
+    <Disclosure as="nav" className="bg-gray-900">
       {({ open }) => (
         <>
+          <UploadForm modalOpen={modalOpen} setModalOpen={setModalOpen} />
           {/* Navbar content */}
           <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
             <div className="relative flex h-16 items-center justify-between">
@@ -95,14 +97,18 @@ export default function Example() {
                   {navigation.map((item) => (
                     <a
                       key={item.name}
-                      href={item.href}
+                      onClick={() => {
+                        setCurrentPage(item.name);
+                      }}
                       className={classNames(
-                        item.current
-                          ? "bg-gray-900 text-white"
+                        item.name === currentPage
+                          ? "bg-black text-white"
                           : "text-gray-300 hover:bg-gray-700 hover:text-white",
                         "rounded-md px-3 py-2 text-sm font-medium"
                       )}
-                      aria-current={item.current ? "page" : undefined}
+                      aria-current={
+                        item.name === currentPage ? "page" : undefined
+                      }
                     >
                       {item.name}
                     </a>
@@ -111,85 +117,87 @@ export default function Example() {
               </div>
               {/* Right side buttons */}
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                {/* Notification button */}
-                <button
-                  type="button"
-                  className="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                >
-                  <span className="absolute -inset-1.5" />
-                  <span className="sr-only">View notifications</span>
-                  <BellIcon className="h-6 w-6" aria-hidden="true" />
-                </button>
                 {/* Profile dropdown */}
                 {user ? (
-                  <Menu as="div" className="relative ml-3">
-                    <MenuButton className="relative flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
-                      <span className="absolute -inset-1.5" />
-                      <span className="sr-only">Open user menu</span>
-                      <img
-                        className="h-8 w-8 rounded-full"
-                        src={user.data.avatar}
-                        alt=""
-                      />
-                    </MenuButton>
-                    <Transition
-                      enter="transition ease-out duration-100"
-                      enterFrom="transform opacity-0 scale-95"
-                      enterTo="transform opacity-100 scale-100"
-                      leave="transition ease-in duration-75"
-                      leaveFrom="transform opacity-100 scale-100"
-                      leaveTo="transform opacity-0 scale-95"
+                  <div className="flex items-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setModalOpen(true);
+                      }}
+                      className="mr-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-black/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                     >
-                      <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                        <MenuItem>
-                          {({ focus }) => (
-                            <a
-                              href="#"
-                              className={classNames(
-                                focus ? "bg-gray-100" : "",
-                                "block px-4 py-2 text-sm text-gray-700"
-                              )}
-                            >
-                              Your Profile
-                            </a>
-                          )}
-                        </MenuItem>
-                        <MenuItem>
-                          {({ focus }) => (
-                            <a
-                              href="#"
-                              className={classNames(
-                                focus ? "bg-gray-100" : "",
-                                "block px-4 py-2 text-sm text-gray-700"
-                              )}
-                            >
-                              Settings
-                            </a>
-                          )}
-                        </MenuItem>
-                        <MenuItem>
-                          {({ focus }) => (
-                            <a
-                              onClick={logout}
-                              className={classNames(
-                                focus ? "bg-gray-100" : "",
-                                "block px-4 py-2 text-sm text-gray-700"
-                              )}
-                            >
-                              Sign out
-                            </a>
-                          )}
-                        </MenuItem>
-                      </MenuItems>
-                    </Transition>
-                  </Menu>
+                      New
+                    </button>
+                    <Menu as="div" className="relative ml-3">
+                      <MenuButton className="relative flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
+                        <span className="absolute -inset-1.5" />
+                        <span className="sr-only">Open user menu</span>
+                        <img
+                          className="h-8 w-8 rounded-full"
+                          src={user.data.avatar}
+                          alt=""
+                        />
+                      </MenuButton>
+                      <Transition
+                        enter="transition ease-out duration-100"
+                        enterFrom="transform opacity-0 scale-95"
+                        enterTo="transform opacity-100 scale-100"
+                        leave="transition ease-in duration-75"
+                        leaveFrom="transform opacity-100 scale-100"
+                        leaveTo="transform opacity-0 scale-95"
+                      >
+                        <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                          <MenuItem>
+                            {({ focus }) => (
+                              <a
+                                href="#"
+                                className={classNames(
+                                  focus ? "bg-gray-100" : "",
+                                  "block px-4 py-2 text-sm text-gray-700"
+                                )}
+                              >
+                                Your Profile
+                              </a>
+                            )}
+                          </MenuItem>
+                          <MenuItem>
+                            {({ focus }) => (
+                              <a
+                                href="#"
+                                className={classNames(
+                                  focus ? "bg-gray-100" : "",
+                                  "block px-4 py-2 text-sm text-gray-700"
+                                )}
+                              >
+                                Settings
+                              </a>
+                            )}
+                          </MenuItem>
+                          <MenuItem>
+                            {({ focus }) => (
+                              <a
+                                onClick={logout}
+                                className={classNames(
+                                  focus ? "bg-gray-100" : "",
+                                  "block px-4 py-2 text-sm text-gray-700"
+                                )}
+                              >
+                                Sign out
+                              </a>
+                            )}
+                          </MenuItem>
+                        </MenuItems>
+                      </Transition>
+                    </Menu>
+                  </div>
                 ) : (
                   <button
                     type="button"
                     onClick={() => {
                       window.location.href = "/login"; // Redirect to login page
                     }}
-                    className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-black/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+                    className="mx-6 rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-black/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
                   >
                     Sign In
                   </button>
@@ -205,7 +213,7 @@ export default function Example() {
                 <DisclosureButton
                   key={item.name}
                   as="a"
-                  href={item.href}
+                  onClick={() => setCurrentPage(item.name)}
                   className={classNames(
                     item.current
                       ? "bg-gray-900 text-white"
