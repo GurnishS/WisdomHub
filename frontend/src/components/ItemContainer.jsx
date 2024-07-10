@@ -2,7 +2,6 @@ import PdfContainer from "./PdfContainer";
 import { Heart, Menu } from "./FontIcons";
 import config from "../config";
 export default function ItemContainer({ heading, item }) {
-  console.log(item);
   const handleLike = () => {
     try {
       fetch(config.apiUrl + "files/like", {
