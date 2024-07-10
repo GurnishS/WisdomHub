@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import { Book } from "./../models/book.model.js";
 import { QuestionPaper } from "./../models/questionPaper.model.js";
 import { StudyMaterial } from "../models/studyMaterial.model.js";
+import { Connection } from "./../models/connection.model.js";
 
 const generateAccessAndRefereshTokens = async (userId) => {
   try {
@@ -277,7 +278,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
       $lookup: {
         from: "connections",
         localField: "_id",
-        foreignField: "followedBy",
+        foreignField: "following",
         as: "followers",
       },
     },
@@ -285,7 +286,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
       $lookup: {
         from: "connections",
         localField: "_id",
-        foreignField: "following",
+        foreignField: "followedBy",
         as: "follows",
       },
     },
@@ -346,6 +347,9 @@ const followUser = asyncHandler(async (req, res) => {
   if (!user) {
     throw new ApiError(404, "User not found");
   }
+  if (userId == req.user._id) {
+    throw new ApiError(400, "You cannot follow yourself");
+  }
   const connection = await Connection.findOne({
     followedBy: req.user._id,
     following: userId,
@@ -368,6 +372,9 @@ const unfollowUser = asyncHandler(async (req, res) => {
   const user = await User.findById(userId);
   if (!user) {
     throw new ApiError(404, "User not found");
+  }
+  if (userId == req.user._id) {
+    throw new ApiError(400, "You cannot unfollow yourself");
   }
   const connection = await Connection.findOneAndDelete({
     followedBy: req.user._id,
@@ -453,6 +460,24 @@ const getUploadedItems = asyncHandler(async (req, res) => {
     );
 });
 
+const searchUser = asyncHandler(async (req, res) => {
+  const { keyword } = req.body;
+  if (!keyword) {
+    res.status(400);
+    throw new Error("Keyword is required");
+  }
+
+  // Search for users where the name or username contains the keyword (case-insensitive)
+  const users = await User.find({
+    $or: [
+      { fullName: { $regex: keyword, $options: "i" } },
+      { username: { $regex: keyword, $options: "i" } },
+    ],
+  }).select("username _id fullName avatar");
+
+  return res.status(200).json(new ApiResponse(200, users, "Search Results"));
+});
+
 export {
   registerUser,
   loginUser,
@@ -460,4 +485,7 @@ export {
   getCurrentUser,
   checkUsernameExists,
   getUserProfile,
+  searchUser,
+  followUser,
+  unfollowUser,
 };

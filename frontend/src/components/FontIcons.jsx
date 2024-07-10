@@ -6,6 +6,7 @@ import {
   faEnvelope,
   faSchool,
   faUser,
+  faSearch,
 } from "@fortawesome/fontawesome-free-solid";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
@@ -55,4 +56,8 @@ function User() {
   return <FontAwesomeIcon icon="fa-solid fa-user" />;
 }
 
-export { Check, Xmark, Load, Heart, Menu, Email, School, User };
+function Search() {
+  return <FontAwesomeIcon icon="fa-solid fa-search" />;
+}
+
+export { Check, Xmark, Load, Heart, Menu, Email, School, User, Search };

@@ -168,13 +168,13 @@ const likeItem = asyncHandler((req, res) => {
   }
   let model;
   switch (type) {
-    case "book":
+    case "Books":
       model = Book;
       break;
-    case "questionPaper":
+    case "Question Papers":
       model = QuestionPaper;
       break;
-    case "studyMaterial":
+    case "Study Materials":
       model = StudyMaterial;
       break;
     default:

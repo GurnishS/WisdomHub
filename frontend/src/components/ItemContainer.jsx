@@ -1,6 +1,26 @@
 import PdfContainer from "./PdfContainer";
 import { Heart, Menu } from "./FontIcons";
-export default function ItemContainer({ item }) {
+import config from "../config";
+export default function ItemContainer({ heading, item }) {
+  console.log(item);
+  const handleLike = () => {
+    try {
+      fetch(config.apiUrl + "files/like", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: item._id,
+          type: heading,
+        }),
+        credentials: "include",
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   return (
     <div className="group relative">
       <button
@@ -11,6 +31,7 @@ export default function ItemContainer({ item }) {
       </button>
       <button
         type="button"
+        onClick={handleLike}
         className="z-20 bg-gray-700 bg-opacity-70 w-8 h-8 absolute rounded-md border  text-sm font-semibold text-blue-500 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black top-14 right-4"
       >
         <Heart />
@@ -32,13 +53,24 @@ export default function ItemContainer({ item }) {
       <div className="mt-4 flex justify-between">
         <div>
           <h3 className="text-sm text-gray-700">
-            <img src={item.avatar} className="rounded-full w-8" />
+            <img
+              src={item.avatar}
+              className="rounded-full w-8 cursor-pointer"
+              onClick={() => {
+                window.location.href = "/user/" + item.username;
+              }}
+            />
             <a href={item.pdfLink}>{item.title}</a>
           </h3>
           <p className="mt-1 text-sm text-gray-500">{item.institute}</p>
         </div>
         <div>
-          <h3 className="text-right mt-2 mb-2">{item.fullName}</h3>
+          <a
+            className="text-right mt-2 mb-2 cursor-pointer"
+            href={"/user/" + item.username}
+          >
+            {item.fullName}
+          </a>
           <p className="text-sm font-medium text-gray-900 text-right">
             {item.yearOfExam}
           </p>

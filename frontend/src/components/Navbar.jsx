@@ -12,6 +12,8 @@ import {
 import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import UploadForm from "./UploadForm.jsx";
 import config from "../config.js";
+import { Search } from "./FontIcons.jsx";
+import SearchModal from "./SearchModal.jsx";
 
 const navigation = [
   { name: "Dashboard" },
@@ -26,6 +28,7 @@ function classNames(...classes) {
 
 export default function Example({ currentPage, setCurrentPage }) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalOpenSearch, setModalOpenSearch] = useState(false);
   const [user, setUser] = useState(null); // State to hold user data
   useEffect(() => {
     fetch(config.apiUrl + "users/current-user", {
@@ -67,7 +70,16 @@ export default function Example({ currentPage, setCurrentPage }) {
     <Disclosure as="nav" className="bg-gray-900">
       {({ open }) => (
         <>
-          <UploadForm modalOpen={modalOpen} setModalOpen={setModalOpen} />
+          {modalOpenSearch && (
+            <SearchModal
+              modalOpenSearch={modalOpenSearch}
+              setModalOpenSearch={setModalOpenSearch}
+            />
+          )}
+          {modalOpen && (
+            <UploadForm modalOpen={modalOpen} setModalOpen={setModalOpen} />
+          )}
+
           {/* Navbar content */}
           <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
             <div className="relative flex h-16 items-center justify-between">
@@ -117,6 +129,16 @@ export default function Example({ currentPage, setCurrentPage }) {
               </div>
               {/* Right side buttons */}
               <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModalOpenSearch(true);
+                  }}
+                  className="text-white bg-gray-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-full text-sm px-5 py-2.5 me-4 dark:bg-gray-800 dark:hover:bg-gray-700 dark:focus:ring-gray-700 dark:border-gray-700"
+                >
+                  <Search />
+                </button>
+
                 {/* Profile dropdown */}
                 {user ? (
                   <div className="flex items-center">

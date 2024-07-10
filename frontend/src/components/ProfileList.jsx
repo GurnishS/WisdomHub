@@ -3,7 +3,7 @@ import Pagination from "./Pagination";
 import SearchBox from "./SearchBox";
 import ItemContainer from "./ItemContainer";
 
-export default function ProfileList({ itemsCopy, setItemsCopy }) {
+export default function ProfileList({ heading, itemsCopy, setItemsCopy }) {
   const [pageNumber, setPageNumber] = useState(1);
   const itemsPerPage = 8;
   const [sortBy, setSortBy] = useState("Name[A-Z]");
@@ -104,7 +104,7 @@ export default function ProfileList({ itemsCopy, setItemsCopy }) {
         <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 lg:max-w-7xl lg:px-8">
           <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
             {currentPageItems.map((item) => (
-              <ItemContainer item={item} key={item?._id} />
+              <ItemContainer heading={heading} item={item} key={item?._id} />
             ))}
           </div>
         </div>

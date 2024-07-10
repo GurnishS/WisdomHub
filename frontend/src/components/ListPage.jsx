@@ -143,7 +143,7 @@ export default function ListPage({ heading }) {
           </h2>
           <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
             {currentPageItems.map((item) => (
-              <ItemContainer item={item} key={item._id} />
+              <ItemContainer heading={heading} item={item} key={item._id} />
             ))}
           </div>
         </div>
