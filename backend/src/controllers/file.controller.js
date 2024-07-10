@@ -40,7 +40,7 @@ const uploadBook = asyncHandler(async (req, res, file) => {
       author,
       publisher,
       uploadedBy: req.user._id,
-      pdfLink: book.url, // Placeholder, should be replaced with actual link from cloud service
+      pdfLink: book.secure_url, // Placeholder, should be replaced with actual link from cloud service
     });
 
     // Retrieve the created book from the database
@@ -84,7 +84,7 @@ const uploadQuestionPaper = asyncHandler(async (req, res, file) => {
       yearOfExam,
       subject,
       uploadedBy: req.user._id,
-      pdfLink: questionPaper.url,
+      pdfLink: questionPaper.secure_url,
     });
     const createdQuestionPaper = await QuestionPaper.findById(
       questionPaperObject._id
@@ -134,7 +134,7 @@ const uploadStudyMaterial = asyncHandler(async (req, res, file) => {
       subject,
       description,
       uploadedBy: req.user._id,
-      pdfLink: studyMaterial.url,
+      pdfLink: studyMaterial.secure_url,
     });
     const createdStudyMaterial = await StudyMaterial.findById(
       studyMaterialObject._id

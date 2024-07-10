@@ -53,7 +53,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
   const user = await User.create({
     fullName,
-    avatar: avatar.url,
+    avatar: avatar.secure_url,
     institute,
     role,
     email,
@@ -249,7 +249,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
 
   const user = await User.findByIdAndUpdate(
     req.user._id,
-    { $set: { avatar: avatar.url } },
+    { $set: { avatar: avatar.secure_url } },
     { new: true }
   ).select("-password");
 
