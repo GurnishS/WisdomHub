@@ -31,15 +31,13 @@ export default function Example({ currentPage, setCurrentPage }) {
   const [modalOpenSearch, setModalOpenSearch] = useState(false);
   const [user, setUser] = useState(null); // State to hold user data
   useEffect(() => {
-    const accessToken = localStorage.getItem("accessToken");
-
+    const accessToken = sessionStorage.getItem("accessToken");
     fetch(config.apiUrl + "users/current-user", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
-      credentials: "include", // Include cookies
     })
       .then((res) => res.json())
       .then((data) => {
@@ -51,16 +49,17 @@ export default function Example({ currentPage, setCurrentPage }) {
   }, []);
 
   const logout = () => {
+    const accessToken = sessionStorage.getItem("accessToken");
     fetch(config.apiUrl + "users/logout", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
       },
-      credentials: "include", // Include cookies
     })
       .then((res) => res.json())
       .then((data) => {
-        console.log(data);
+        sessionStorage.removeItem("accessToken");
         window.location.href = "/login";
         // Update user state with fetched data
       })

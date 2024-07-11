@@ -16,12 +16,13 @@ export default function SignIn() {
   }, [loading]);
 
   useEffect(() => {
+    const accessToken = sessionStorage.getItem("accessToken");
     fetch(config.apiUrl + "users/current-user", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
       },
-      credentials: "include", // Include cookies
     })
       .then((res) => res.json())
       .then((data) => {
@@ -57,7 +58,6 @@ export default function SignIn() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
-        credentials: "include", // Send cookies with the request
       });
 
       if (!response.ok) {
@@ -65,8 +65,8 @@ export default function SignIn() {
       }
 
       const data = await response.json();
-      localStorage.setItem("accessToken", data.data.accessToken);
-      localStorage.setItem("refreshToken", data.data.refreshToken);
+      sessionStorage.setItem("accessToken", data.data.accessToken);
+      sessionStorage.setItem("refreshToken", data.data.refreshToken);
       window.location.href = "/dashboard";
     } catch (error) {
       console.error("Error:", error);

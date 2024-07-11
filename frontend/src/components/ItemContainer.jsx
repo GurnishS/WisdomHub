@@ -4,16 +4,17 @@ import config from "../config";
 export default function ItemContainer({ heading, item }) {
   const handleLike = () => {
     try {
+      const accessToken = sessionStorage.getItem('accessToken');
       fetch(config.apiUrl + "files/like", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          'Authorization': `Bearer ${accessToken}`
         },
         body: JSON.stringify({
           id: item._id,
           type: heading,
         }),
-        credentials: "include",
       });
     } catch (err) {
       console.log(err);

@@ -15,7 +15,6 @@ export default function Exploresection({ setCurrentPage }) {
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include", // Include cookies
         });
         if (!response.ok) {
           throw new Error("Failed to fetch data");
@@ -38,7 +37,6 @@ export default function Exploresection({ setCurrentPage }) {
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include", // Include cookies
         });
         if (!response.ok) {
           throw new Error("Failed to fetch data");
@@ -60,7 +58,6 @@ export default function Exploresection({ setCurrentPage }) {
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include", // Include cookies
         });
         if (!response.ok) {
           throw new Error("Failed to fetch data");

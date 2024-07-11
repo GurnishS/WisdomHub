@@ -102,12 +102,13 @@ export default function ListPage({ heading }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const accessToken = sessionStorage.getItem("accessToken");
         const response = await fetch(fetchUrl, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
           },
-          credentials: "include", // Include cookies
         });
         if (!response.ok) {
           throw new Error("Failed to fetch data");

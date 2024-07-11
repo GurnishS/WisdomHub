@@ -22,8 +22,8 @@ const RegisterForm = () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: "Bearer " + sessionStorage.getItem("accessToken"),
       },
-      credentials: "include", // Include cookies
     })
       .then((res) => res.json())
       .then((data) => {

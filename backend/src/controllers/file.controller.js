@@ -64,6 +64,7 @@ const uploadBook = asyncHandler(async (req, res, file) => {
 
 const uploadQuestionPaper = asyncHandler(async (req, res, file) => {
   const { title, subject, institute, yearOfExam } = req.body;
+  console.log(title, subject, institute, yearOfExam);
   if ([title, subject, institute, yearOfExam].some((field) => !field.trim())) {
     throw new ApiError(400, "Please fill all fields");
   }

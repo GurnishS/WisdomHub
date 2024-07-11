@@ -67,8 +67,10 @@ const Modal = ({ modalOpen = false, setModalOpen }) => {
       }
       const response = await fetch(endpoint, {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
+        },
         body: formData,
-        credentials: "include",
       });
       setLoading(false);
       if (!response.ok) {

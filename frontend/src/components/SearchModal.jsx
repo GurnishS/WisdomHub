@@ -41,12 +41,13 @@ const Modal = ({ modalOpenSearch = false, setModalOpenSearch }) => {
     const keyword = e.target.value;
     const payload = { keyword };
     setLoading(true);
+    const accessToken = sessionStorage.getItem("accessToken");
     fetch(config.apiUrl + "users/search-user", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
       },
-      credentials: "include", // Include cookies
       body: JSON.stringify(payload), // Send payload as JSON
     })
       .then((res) => res.json())

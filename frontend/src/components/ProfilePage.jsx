@@ -23,8 +23,8 @@ const Profile = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: "Bearer " + sessionStorage.getItem("accessToken"),
         },
-        credentials: "include", // Include cookies
       });
       user.isFollowing = true;
       user.followerCount = user.followerCount + 1;
@@ -40,8 +40,8 @@ const Profile = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: "Bearer " + sessionStorage.getItem("accessToken"),
         },
-        credentials: "include", // Include cookies
       });
       user.isFollowing = false;
       user.followerCount = user.followerCount - 1;
@@ -59,6 +59,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
+        const accessToken = sessionStorage.getItem("accessToken");
         const fetchAPI = username
           ? config.apiUrl + "users/" + username
           : config.apiUrl + "users/get-user-profile";
@@ -66,8 +67,8 @@ const Profile = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
           },
-          credentials: "include", // Include cookies
         });
         const data = await res.json();
         setUser(data.data.userProfile[0]);
