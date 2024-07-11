@@ -31,10 +31,13 @@ export default function Example({ currentPage, setCurrentPage }) {
   const [modalOpenSearch, setModalOpenSearch] = useState(false);
   const [user, setUser] = useState(null); // State to hold user data
   useEffect(() => {
+    const accessToken = localStorage.getItem("accessToken");
+
     fetch(config.apiUrl + "users/current-user", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
       },
       credentials: "include", // Include cookies
     })

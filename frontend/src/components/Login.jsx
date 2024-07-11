@@ -65,13 +65,13 @@ export default function SignIn() {
       }
 
       const data = await response.json();
+      localStorage.setItem("accessToken", data.data.accessToken);
+      localStorage.setItem("refreshToken", data.data.refreshToken);
       window.location.href = "/dashboard";
-      // Clear form or navigate to another page upon successful login
-      // Example: history.push("/dashboard");
     } catch (error) {
       console.error("Error:", error);
       if (error.message === "Invalid Access Token") {
-        // Redirect to login page or handle JWT expiration error
+        //Redirect to login page or handle JWT expiration error
         history.push("/login");
       } else {
         alert("Login failed. Please try again.");

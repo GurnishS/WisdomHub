@@ -107,29 +107,10 @@ const loginUser = asyncHandler(async (req, res) => {
     secure: true,
   };
 
-  console.log(
-    "Response:",
-    res
-      .status(200)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", refreshToken, options)
-      .json(
-        new ApiResponse(
-          200,
-          {
-            user: loggedInUser,
-            accessToken,
-            refreshToken,
-          },
-          "User logged In Successfully"
-        )
-      )
-  );
-
   return res
     .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
+    .set("x-access-token", accessToken)
+    .set("x-refresh-token", refreshToken)
     .json(
       new ApiResponse(
         200,
