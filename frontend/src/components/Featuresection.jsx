@@ -1,5 +1,3 @@
-
-import { ArrowPathIcon, CloudArrowUpIcon, FingerPrintIcon, LockClosedIcon } from '@heroicons/react/24/outline'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFile ,faBook, faUserGroup, faLightbulb} from '@fortawesome/free-solid-svg-icons';
 
@@ -30,7 +28,7 @@ const features = [
   },
 ]
 
-export default function Example() {
+export default function Featuresection() {
   return (
     <div className="bg-white py-20 sm:py-20">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">

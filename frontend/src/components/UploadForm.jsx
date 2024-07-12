@@ -6,9 +6,7 @@ import config from "../config";
 const Modal = ({ modalOpen = false, setModalOpen }) => {
   const [uploadType, setUploadType] = useState("Book");
   const [loading, setLoading] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [showInfo, setShowInfo] = useState(false);
-  const [showError, setShowError] = useState(false);
+
   useEffect(() => {
     // Set overflow hidden when loading
     if (loading) {
@@ -40,7 +38,7 @@ const Modal = ({ modalOpen = false, setModalOpen }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setShowInfo(true);
+    store.addMessage({ type: "Warning", content: "Upload Started" });
     setLoading(true);
     try {
       const form = e.target;
@@ -57,7 +55,7 @@ const Modal = ({ modalOpen = false, setModalOpen }) => {
         formData.append("questionPaper", form.file.files[0]);
         formData.append("subject", form.subject.value);
         formData.append("institute", form.institute.value);
-        formData.append("year", form.year.value);
+        formData.append("yearOfExam", form.year.value);
       } else if (uploadType === "Study Material") {
         endpoint += "upload-study-material";
         formData.append("studyMaterial", form.file.files[0]);
@@ -72,16 +70,21 @@ const Modal = ({ modalOpen = false, setModalOpen }) => {
         },
         body: formData,
       });
+
       setLoading(false);
+      store.addMessage({ type: "Success", content: response.data.message });
       if (!response.ok) {
-        setShowError(true);
+        store.addMessage({
+          type: "Danger",
+          content: "Network response was not ok",
+        });
         throw new Error("Network response was not ok");
       }
-      setShowSuccess(true);
       handleClose();
     } catch (error) {
       setLoading(false);
-      console.error("Error uploading file:", error);
+      store.addMessage({ type: "Danger", content: error.message });
+
       // Handle error (e.g., show error message to the user)
     }
   };
@@ -95,9 +98,6 @@ const Modal = ({ modalOpen = false, setModalOpen }) => {
   return (
     <>
       {loading && <Loading />}
-      {showSuccess && <SuccessToast message="File Uploaded Successfully" />}
-      {showInfo && <WarningToast message="Upload Started" />}
-      {showError && <DangerToast message="Network Eroor" />}
       <div
         id="back-film"
         className="w-screen h-screen fixed bg-opacity-55 bg-gray-500 hidden z-20"

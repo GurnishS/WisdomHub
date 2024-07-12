@@ -1,9 +1,12 @@
+import jwt from "jsonwebtoken";
+
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+
 import { User } from "../models/user.model.js";
-import jwt from "jsonwebtoken";
+
 import { Book } from "./../models/book.model.js";
 import { QuestionPaper } from "./../models/questionPaper.model.js";
 import { StudyMaterial } from "../models/studyMaterial.model.js";
@@ -20,11 +23,7 @@ const generateAccessAndRefereshTokens = async (userId) => {
 
     return { accessToken, refreshToken };
   } catch (error) {
-    console.log("Error:", error);
-    throw new ApiError(
-      500,
-      "Something went wrong while generating referesh and access token"
-    );
+    throw new ApiError(500, "Something went wrong while generating tokens");
   }
 };
 
@@ -45,7 +44,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const avatarLocalPath = req.files?.avatar[0]?.path;
 
   if (!avatarLocalPath) {
-    throw new ApiError(400, "Avatar file is required");
+    throw new ApiError(400, "Avatar is required");
   }
   const avatar = await uploadOnCloudinary(avatarLocalPath);
   if (!avatar) {
@@ -61,7 +60,7 @@ const registerUser = asyncHandler(async (req, res) => {
     username: username.toLowerCase(),
   });
   const createdUser = await User.findById(user._id).select(
-    "-password -refreshToken"
+    "username email fullName institute role"
   );
 
   if (!createdUser) {
@@ -75,7 +74,6 @@ const registerUser = asyncHandler(async (req, res) => {
 
 const loginUser = asyncHandler(async (req, res) => {
   const { email, username, password } = req.body;
-  console.log(email);
 
   if (!username && !email) {
     throw new ApiError(400, "username or email is required");
@@ -99,13 +97,8 @@ const loginUser = asyncHandler(async (req, res) => {
     user._id
   );
   const loggedInUser = await User.findById(user._id).select(
-    "-password -refreshToken"
+    "username email fullName"
   );
-
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
 
   return res.status(200).json(
     new ApiResponse(
@@ -132,16 +125,16 @@ const logoutUser = asyncHandler(async (req, res) => {
       new: true,
     }
   );
-
-  return res.status(200).json(new ApiResponse(200, {}, "User logged Out"));
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Successfully logged out"));
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
-  const incomingRefreshToken =
-    req.body.refreshToken;
+  const incomingRefreshToken = req.body.refreshToken;
 
   if (!incomingRefreshToken) {
-    throw new ApiError(401, "unauthorized request");
+    throw new ApiError(401, "Unauthorized request");
   }
 
   try {
@@ -157,21 +150,14 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
     }
 
     if (incomingRefreshToken !== user?.refreshToken) {
-      throw new ApiError(401, "Refresh token is expired or used");
+      throw new ApiError(401, "Refresh token is expired");
     }
-
-    const options = {
-      httpOnly: true,
-      secure: true,
-    };
 
     const { accessToken, newRefreshToken } =
       await generateAccessAndRefereshTokens(user._id);
 
     return res
       .status(200)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", newRefreshToken, options)
       .json(
         new ApiResponse(
           200,
@@ -189,7 +175,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
   const user = User.findById(req.user?._id);
   const isPasswordCorrect = await user.isPasswordCorrect(currentPassword);
   if (!isPasswordCorrect) {
-    throw new ApiError(400, "Current password is incorrect");
+    throw new ApiError(400, "Password is incorrect");
   }
   user.password = newPassword;
   user.save({ validateBeforeSave: false });
@@ -218,7 +204,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 const updateUserAvatar = asyncHandler(async (req, res) => {
   const avatarLocalPath = req.file?.path;
   if (!avatarLocalPath) {
-    throw new ApiError(400, "Avatar file is required");
+    throw new ApiError(400, "Avatar is required");
   }
 
   const avatar = await uploadOnCloudinary(avatarLocalPath);
@@ -230,7 +216,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     req.user._id,
     { $set: { avatar: avatar.secure_url } },
     { new: true }
-  ).select("-password");
+  ).select("avatar username fullName");
 
   return res.status(200).json(new ApiResponse(200, user, "Avatar updated"));
 });
@@ -244,7 +230,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
   }
 
   if (!username?.trim()) {
-    throw new ApiError(400, "Username is missing");
+    throw new ApiError(400, "Username is required");
   }
 
   const userProfile = await User.aggregate([
@@ -280,6 +266,13 @@ const getUserProfile = asyncHandler(async (req, res) => {
             else: false,
           },
         },
+        disableButton: {
+          $cond: {
+            if: { $eq: [req.user.username, username] },
+            then: true,
+            else: false,
+          },
+        },
       },
     },
     {
@@ -290,6 +283,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
         followerCount: 1,
         followingCount: 1,
         isFollowing: 1,
+        disableButton: 1,
         email: 1,
         role: 1,
         institute: 1,
@@ -312,7 +306,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
       new ApiResponse(
         200,
         { userProfile, items: { questionPapers, studyMaterials, books } },
-        "User profile"
+        "User profile fetched successfully"
       )
     );
 });
@@ -416,29 +410,6 @@ const checkUsernameExists = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, false, "Username does not exist"));
 });
 
-const getUploadedItems = asyncHandler(async (req, res) => {
-  const { username } = req.body;
-  const user = await User.findOne({ username });
-  if (!user) {
-    return res
-      .status(404)
-      .json(new ApiResponse(404, false, "Username does not exist"));
-  }
-
-  const books = await Book.find({ uploadedBy: user._id });
-  const questionPapers = await QuestionPaper.find({ uploadedBy: user._id });
-  const studyMaterials = await StudyMaterial.find({ uploadedBy: user._id });
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        { questionPapers, studyMaterials, books },
-        "User Items"
-      )
-    );
-});
-
 const searchUser = asyncHandler(async (req, res) => {
   const { keyword } = req.body;
   if (!keyword) {
@@ -447,13 +418,43 @@ const searchUser = asyncHandler(async (req, res) => {
   }
 
   // Search for users where the name or username contains the keyword (case-insensitive)
-  const users = await User.find({
-    $or: [
-      { fullName: { $regex: keyword, $options: "i" } },
-      { username: { $regex: keyword, $options: "i" } },
-    ],
-  }).select("username _id fullName avatar");
+  const users = await User.aggregate([
+    {
+      $match: {
+        $or: [
+          { fullName: { $regex: keyword, $options: "i" } },
+          { username: { $regex: keyword, $options: "i" } },
+        ],
+        username: { $ne: req.user.username },
+      },
+    },
+    {
+      $lookup: {
+        from: "connections",
+        localField: "_id",
+        foreignField: "following",
+        as: "followers",
+      },
+    },
+    {
+      $addFields: {
+        isFollowing: {
+          $in: [req.user._id, "$followers.followedBy"],
+        },
+      },
+    },
+    {
+      $project: {
+        fullName: 1,
+        username: 1,
+        avatar: 1,
+        isFollowing: 1,
+        _id: 1,
+      },
+    },
+  ]);
 
+  console.log(users);
   return res.status(200).json(new ApiResponse(200, users, "Search Results"));
 });
 

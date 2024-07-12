@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { ArrowRight, LocateFixedIcon, X } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Check, Load, Xmark } from "./FontIcons.jsx";
 import Loading from "./Loading.jsx";
 import config from "../config.js";
+import store from "../store.js";
 
 const RegisterForm = () => {
-  const [user, setUser] = useState(null); // State to hold user data
   const [loading, setLoading] = useState(false);
+  const accessToken = sessionStorage.getItem("accessToken");
 
   useEffect(() => {
     // Set overflow hidden when loading
@@ -18,21 +19,23 @@ const RegisterForm = () => {
   }, [loading]);
 
   useEffect(() => {
-    fetch(config.apiUrl + "users/current-user", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + sessionStorage.getItem("accessToken"),
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setUser(data);
-        window.location.href = "/dashboard";
+    if (accessToken) {
+      fetch(config.apiUrl + "users/current-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + sessionStorage.getItem("accessToken"),
+        },
       })
-      .catch((err) => {
-        console.log(err);
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          store.addMessage({ type: "Success", content: "Login Success" });
+          window.location.href = "/dashboard";
+        })
+        .catch((err) => {
+          store.addMessage({ type: "Danger", content: err.message });
+        });
+    }
   }, []);
 
   const [formData, setFormData] = useState({
@@ -91,7 +94,10 @@ const RegisterForm = () => {
       );
 
       if (!response.ok) {
-        console.log(response);
+        store.addMessage({
+          type: "Danger",
+          content: "Network response was not ok",
+        });
         throw new Error("Network response was not ok");
       }
 
@@ -129,13 +135,16 @@ const RegisterForm = () => {
 
       if (!response.ok) {
         setDisableSubmit(false);
+        store.addMessage({
+          type: "Danger",
+          content: "Network response was not ok",
+        });
         throw new Error("Network response was not ok");
       }
       window.location.href = "/login";
     } catch (error) {
-      console.error("Error:", error);
       setDisableSubmit(false);
-      alert("Registration failed. Please try again.");
+      store.addMessage({ type: "Danger", content: error.message });
     }
   };
 

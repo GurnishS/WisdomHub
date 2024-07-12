@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import Pagination from "./Pagination";
 import SearchBox from "./SearchBox";
 import ItemContainer from "./ItemContainer";
+import store from "../store";
+
 const navigation = {
   "Question Papers": "/get-question-papers",
   Books: "/get-books",
@@ -111,13 +113,14 @@ export default function ListPage({ heading }) {
           },
         });
         if (!response.ok) {
+          store.addMessage({ type: "Danger", content: "Network response was not ok" });
           throw new Error("Failed to fetch data");
         }
         const data = await response.json();
         setItems(sortObjectByTitle(data.data, "title")); // Assuming data is an array of items
         setItemsCopy(data.data);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        store.addMessage({ type: "Danger", content: error.message });
       }
     };
 

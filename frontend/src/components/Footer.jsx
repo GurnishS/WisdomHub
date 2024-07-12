@@ -21,9 +21,9 @@ const LogoSection = () => {
   return (
     <div className="mb-6 md:mb-0">
       <a href="#" className="flex items-center">
-        <img src="/wisedom-icon.png" className="h-8 me-3" alt="FlowBite Logo" />
+        <img src="/cap.png" className="h-12 me-3" alt="FlowBite Logo" />
         <span className="self-center text-2xl font-semibold whitespace-nowrap text-white">
-          Infosphere
+          WisdomHub
         </span>
       </a>
     </div>
@@ -93,7 +93,7 @@ const BottomSection = () => {
       <span className="text-sm sm:text-center text-white">
         © 2024{" "}
         <a href="/admin/adminPanel.html" className="hover:underline">
-          Infosphere
+          Wisdom Hub
         </a>
         . All Rights Reserved.
       </span>

@@ -1,15 +1,51 @@
 import PdfContainer from "./PdfContainer";
 import { Heart, Menu } from "./FontIcons";
+import { useState } from "react";
 import config from "../config";
+import store from "../store";
+
 export default function ItemContainer({ heading, item }) {
+  const userId = sessionStorage.getItem("userId");
+  const [liked, setLiked] = useState(
+    userId ? item.likes.includes(userId) : false
+  );
+  const [views, setViews] = useState(item.views);
+  const [likes, setLikes] = useState(item.likes.length);
+
+  const incrementViews = () => {
+    setViews(views + 1);
+    try {
+      fetch(config.apiUrl + "files/view", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: item._id,
+          type: heading,
+        }),
+      });
+      window.open(item.pdfLink, "_blank");
+    } catch (err) {
+      store.addMessage({ type: "Danger", content: err.message });
+    }
+  };
+
   const handleLike = () => {
     try {
-      const accessToken = sessionStorage.getItem('accessToken');
+      const accessToken = sessionStorage.getItem("accessToken");
+      setLiked(!liked);
+      if (liked) {
+        setLikes(likes - 1);
+      } else {
+        setLikes(likes + 1);
+      }
+
       fetch(config.apiUrl + "files/like", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          'Authorization': `Bearer ${accessToken}`
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           id: item._id,
@@ -17,7 +53,8 @@ export default function ItemContainer({ heading, item }) {
         }),
       });
     } catch (err) {
-      console.log(err);
+      setLiked(!liked);
+      store.addMessage({ type: "Danger", content: err.message });
     }
   };
 
@@ -29,52 +66,67 @@ export default function ItemContainer({ heading, item }) {
       >
         <Menu />
       </button>
-      <button
-        type="button"
-        onClick={handleLike}
-        className="z-20 bg-gray-700 bg-opacity-70 w-8 h-8 absolute rounded-md border  text-sm font-semibold text-blue-500 shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black top-14 right-4"
-      >
-        <Heart />
-      </button>
+      {userId && (
+        <button
+          type="button"
+          onClick={handleLike}
+          className={
+            "z-20 bg-gray-700 bg-opacity-70 w-8 h-8 absolute rounded-md border  text-sm font-semibold shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black top-14 right-4" +
+            (liked ? " text-blue-500" : " text-white")
+          }
+        >
+          <Heart />
+        </button>
+      )}
       <p className="z-20 absolute  top-4 left-4 text-lg group-hover:text-blue-600 group-hover:text-xl">
-        Likes:0
+        Likes:{likes}
       </p>
       <p className="z-20 absolute top-14 left-4 text-lg group-hover:text-blue-600 group-hover:text-xl">
-        Views:0
+        Views:{views}
       </p>
       <div className="aspect-h-1 aspect-w-1 w-full overflow-hidden rounded-md bg-gray-200 lg:aspect-none group-hover:opacity-75 lg:h-80">
-        <a href={item.pdfLink} className="flex justify-center items-center">
+        <a
+          className="flex justify-center items-center"
+          onClick={incrementViews}
+        >
           <PdfContainer
             className="h-full w-full object-cover object-center lg:h-full lg:w-full"
             pdfLink={item.pdfLink}
           />
         </a>
       </div>
-      <div className="mt-4 flex justify-between">
-        <div>
-          <h3 className="text-sm text-gray-700">
-            <img
-              src={item.avatar}
-              className="rounded-full w-8 cursor-pointer"
-              onClick={() => {
-                window.location.href = "/user/" + item.username;
-              }}
-            />
-            <a href={item.pdfLink}>{item.title}</a>
-          </h3>
-          <p className="mt-1 text-sm text-gray-500">{item.institute}</p>
-        </div>
-        <div>
+      <div className="mt-4 flex-col">
+        <div className="flex items-center justify-between">
+          <img
+            src={item.avatar}
+            className="rounded-full w-8 cursor-pointer mr-2"
+            onClick={() => {
+              window.location.href = "/user/" + item.username;
+            }}
+          />
           <a
-            className="text-right mt-2 mb-2 cursor-pointer"
+            className="text-right text-lg overflow-hidden text-nowrap mt-2 mb-2 cursor-pointer"
             href={"/user/" + item.username}
           >
             {item.fullName}
           </a>
-          <p className="text-sm font-medium text-gray-900 text-right">
-            {item.yearOfExam}
+        </div>
+        <div className="flex items-center justify-between">
+          <a
+            className="overflow-hidden text-nowrap w-1/2 cursor-pointer text-gray-900 font-medium"
+            href={item.pdfLink}
+          >
+            {item.title}
+          </a>
+          <p className="text-sm font-medium text-gray-800 text-right text-clip">
+            {item.yearOfExam || item.author}
           </p>
-          <p className="text-sm font-medium text-gray-900 text-right">
+        </div>
+        <div className="flex items-center justify-between">
+          <p className="overflow-hidden text-nowrap">
+            {item.publisher || item.description || item.institute}
+          </p>
+          <p className="text-sm text-right overflow-hidden text-nowrap">
             {item.subject}
           </p>
         </div>

@@ -9,6 +9,8 @@ import {
   MenuItems,
   Transition,
 } from "@headlessui/react";
+import store from "../store";
+
 import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import UploadForm from "./UploadForm.jsx";
 import config from "../config.js";
@@ -32,20 +34,22 @@ export default function Example({ currentPage, setCurrentPage }) {
   const [user, setUser] = useState(null); // State to hold user data
   useEffect(() => {
     const accessToken = sessionStorage.getItem("accessToken");
-    fetch(config.apiUrl + "users/current-user", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setUser(data); // Update user state with fetched data
+    if (accessToken) {
+      fetch(config.apiUrl + "users/current-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
       })
-      .catch((err) => {
-        console.log(err);
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          setUser(data);
+        })
+        .catch((err) => {
+          store.addMessage({ type: "Danger", content: err.message });
+        });
+    }
   }, []);
 
   const logout = () => {
@@ -64,7 +68,7 @@ export default function Example({ currentPage, setCurrentPage }) {
         // Update user state with fetched data
       })
       .catch((err) => {
-        console.log(err);
+        store.addMessage({ type: "Danger", content: err.message });
       });
   };
 
@@ -100,8 +104,8 @@ export default function Example({ currentPage, setCurrentPage }) {
               {/* Company logo */}
               <div className="flex flex-shrink-0 items-center">
                 <img
-                  className="h-8 w-auto"
-                  src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
+                  className="h-12 w-auto ml-8 sm:ml-0 lg:ml-0 "
+                  src="/logo.png"
                   alt="Your Company"
                 />
               </div>
@@ -175,7 +179,7 @@ export default function Example({ currentPage, setCurrentPage }) {
                           <MenuItem>
                             {({ focus }) => (
                               <a
-                                href="#"
+                                href="/user-profile "
                                 className={classNames(
                                   focus ? "bg-gray-100" : "",
                                   "block px-4 py-2 text-sm text-gray-700"

@@ -1,64 +1,53 @@
-// Import necessary modules
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
-import { Book } from "../models/book.model.js";
+
 import { User } from "../models/user.model.js";
+
+import { Book } from "../models/book.model.js";
 import { StudyMaterial } from "../models/studyMaterial.model.js";
 import { QuestionPaper } from "../models/questionPaper.model.js";
-import { ApiResponse } from "../utils/ApiResponse.js";
 
-// Define the uploadBook handler function
 const uploadBook = asyncHandler(async (req, res, file) => {
   const { title, author, publisher } = req.body;
-
-  // Validate required fields
   if ([title, author, publisher].some((field) => !field.trim())) {
-    throw new ApiError(400, "Please fill all fields");
+    throw new ApiError(400, "Please fill all fields"); //todo:map this in frontend
   }
 
   try {
-    // Check if a book with the same title already exists
     const existedBook = await Book.findOne({ title });
     if (existedBook) {
-      throw new ApiError(400, "Book with same title already exists");
+      throw new ApiError(400, "Titled book already exists"); //todo:map this in frontend
     }
 
-    // Get the local path of the uploaded PDF file
     const bookLocalPath = req.files?.book[0]?.path;
     if (!bookLocalPath) {
-      throw new ApiError(400, "PDF file is required");
+      throw new ApiError(400, "PDF is required"); //todo:map this in frontend
     }
+
     const book = await uploadOnCloudinary(bookLocalPath);
-    console.log("Book:", book);
 
-    // Generate and upload a thumbnail for the PDF
-
-    // Create a new Book object in the database
     const bookObject = await Book.create({
       title,
       author,
       publisher,
       uploadedBy: req.user._id,
-      pdfLink: book.secure_url, // Placeholder, should be replaced with actual link from cloud service
+      pdfLink: book.secure_url,
     });
 
-    // Retrieve the created book from the database
     const createdBook = await Book.findById(bookObject._id);
     if (!createdBook) {
       throw new ApiError(
         500,
-        "Something went wrong while creating the book object"
+        "Something went wrong while object" //todo:map this in frontend
       );
     }
-
-    // Respond with a success message and the created book details
     return res
       .status(201)
-      .json(new ApiResponse(200, createdBook, "Book registered successfully"));
+      .json(new ApiResponse(200, createdBook, "Book uploaded successfully")); //todo:map this in frontend
   } catch (error) {
-    console.error("Error uploading PDF:", error);
-    throw new ApiError(500, "Something went wrong while uploading PDF");
+    throw new ApiError(500, "Something went wrong while uploading PDF"); //todo:map this in frontend
   }
 });
 
@@ -66,19 +55,18 @@ const uploadQuestionPaper = asyncHandler(async (req, res, file) => {
   const { title, subject, institute, yearOfExam } = req.body;
   console.log(title, subject, institute, yearOfExam);
   if ([title, subject, institute, yearOfExam].some((field) => !field.trim())) {
-    throw new ApiError(400, "Please fill all fields");
+    throw new ApiError(400, "Please fill all fields"); //todo:map this in frontend
   }
   try {
     const existedQuestionPaper = await QuestionPaper.findOne({ title });
     if (existedQuestionPaper) {
-      throw new ApiError(400, "Question paper with same title already exists");
+      throw new ApiError(400, "Titled question paper already exists"); //todo:map this in frontend
     }
     const questionPaperLocalPath = req.files?.questionPaper[0]?.path;
     if (!questionPaperLocalPath) {
-      throw new ApiError(400, "Question paper is required");
+      throw new ApiError(400, "PDF is required");
     }
     const questionPaper = await uploadOnCloudinary(questionPaperLocalPath);
-    console.log("Question Paper:", questionPaper);
     const questionPaperObject = await QuestionPaper.create({
       title,
       institute,
@@ -91,10 +79,7 @@ const uploadQuestionPaper = asyncHandler(async (req, res, file) => {
       questionPaperObject._id
     );
     if (!createdQuestionPaper) {
-      throw new ApiError(
-        500,
-        "Something went wrong while creating the question paper object"
-      );
+      throw new ApiError(500, "Something went wrong while object");
     }
     return res
       .status(201)
@@ -102,11 +87,10 @@ const uploadQuestionPaper = asyncHandler(async (req, res, file) => {
         new ApiResponse(
           200,
           createdQuestionPaper,
-          "Question paper registered successfully"
+          "Question paper uploaded successfully"
         )
       );
   } catch (error) {
-    console.error("Error uploading PDF:", error);
     throw new ApiError(500, "Something went wrong while uploading PDF");
   }
 });
@@ -121,11 +105,11 @@ const uploadStudyMaterial = asyncHandler(async (req, res, file) => {
       title,
     });
     if (existedStudyMaterial) {
-      throw new ApiError(400, "Study material with same title already exists");
+      throw new ApiError(400, "Titled Study Material already exists");
     }
     const studyMaterialLocalPath = req.files?.studyMaterial[0]?.path;
     if (!studyMaterialLocalPath) {
-      throw new ApiError(400, "Study material is required");
+      throw new ApiError(400, "PDF is required");
     }
     const studyMaterial = await uploadOnCloudinary(studyMaterialLocalPath);
     console.log("Study Material:", studyMaterial);
@@ -141,10 +125,7 @@ const uploadStudyMaterial = asyncHandler(async (req, res, file) => {
       studyMaterialObject._id
     );
     if (!createdStudyMaterial) {
-      throw new ApiError(
-        500,
-        "Something went wrong while creating the study material object"
-      );
+      throw new ApiError(500, "Something went wrong while creating object");
     }
     return res
       .status(201)
@@ -152,11 +133,10 @@ const uploadStudyMaterial = asyncHandler(async (req, res, file) => {
         new ApiResponse(
           200,
           createdStudyMaterial,
-          "Study material registered successfully"
+          "Study material uploaded successfully"
         )
       );
   } catch (error) {
-    console.error("Error uploading PDF:", error);
     throw new ApiError(500, "Something went wrong while uploading PDF");
   }
 });
@@ -200,6 +180,41 @@ const likeItem = asyncHandler((req, res) => {
     .catch((error) => {
       console.error("Error liking item:", error);
       throw new ApiError(500, "Something went wrong while liking item");
+    });
+});
+
+const viewedItem = asyncHandler((req, res) => {
+  const { id, type } = req.body;
+  console.log(id, type);
+  let model;
+  switch (type) {
+    case "Books":
+      model = Book;
+      break;
+    case "Question Papers":
+      model = QuestionPaper;
+      break;
+    case "Study Materials":
+      model = StudyMaterial;
+      break;
+    default:
+      throw new ApiError(400, "Invalid type");
+  }
+  model
+    .findById(id)
+    .then((item) => {
+      if (!item) {
+        throw new ApiError(404, "Item not found");
+      }
+      item.views += 1;
+      return item.save();
+    })
+    .then((item) => {
+      return res.status(200).json(new ApiResponse(200, item, "Success"));
+    })
+    .catch((error) => {
+      console.error("Error increasing view count", error);
+      throw new ApiError(500, "Something went wrong");
     });
 });
 
@@ -274,10 +289,18 @@ const getStudyMaterial = asyncHandler(async (req, res) => {
     // Respond with the modified study materials array
     return res
       .status(200)
-      .json(new ApiResponse(200, studyMaterialsWithUsers, "Success"));
+      .json(
+        new ApiResponse(
+          200,
+          studyMaterialsWithUsers,
+          "Successfully fetched study materials"
+        )
+      );
   } catch (error) {
-    console.error("Error getting studyMaterial:", error);
-    throw new ApiError(500, "Something went wrong while getting studyMaterial");
+    throw new ApiError(
+      500,
+      "Something went wrong while fetching studyMaterials"
+    );
   }
 });
 
@@ -314,12 +337,18 @@ const getQuestionPaper = asyncHandler(async (req, res) => {
     // Respond with the modified question papers array
     return res
       .status(200)
-      .json(new ApiResponse(200, questionPapersWithUsers, "Success"));
+      .json(
+        new ApiResponse(
+          200,
+          questionPapersWithUsers,
+          "Successfully fetched question papers"
+        )
+      );
   } catch (error) {
     console.error("Error getting questionPapers:", error);
     throw new ApiError(
       500,
-      "Something went wrong while getting questionPapers"
+      "Something went wrong while fetching questionPapers"
     );
   }
 });
@@ -332,4 +361,5 @@ export {
   getBooks,
   getQuestionPaper,
   getStudyMaterial,
+  viewedItem,
 };

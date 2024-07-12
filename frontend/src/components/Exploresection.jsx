@@ -17,12 +17,16 @@ export default function Exploresection({ setCurrentPage }) {
           },
         });
         if (!response.ok) {
+          store.addMessage({
+            type: "Danger",
+            content: "Network response was not ok",
+          });
           throw new Error("Failed to fetch data");
         }
         const data = await response.json();
         setBooks(data.data.slice(0, 4));
       } catch (error) {
-        console.error("Error fetching data:", error);
+        store.addMessage({ type: "Danger", content: error.message });
       }
     };
 

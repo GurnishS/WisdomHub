@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 import Loading from "./Loading";
 import config from "../config";
+import store from "../store";
 export default function SignIn() {
-  const [user, setUser] = useState(null); // State to hold user data
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -17,21 +17,24 @@ export default function SignIn() {
 
   useEffect(() => {
     const accessToken = sessionStorage.getItem("accessToken");
-    fetch(config.apiUrl + "users/current-user", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setUser(data);
-        window.location.href = "/dashboard";
+    if (accessToken) {
+      fetch(config.apiUrl + "users/current-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
       })
-      .catch((err) => {
-        console.log(err);
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          store.addMessage({ type: "Success", content: "Login Success" });
+          window.location.href = "/dashboard";
+        })
+        .catch((err) => {
+          console.log(err);
+          store.addMessage({ type: "Danger", content: err.message });
+        });
+    }
   }, []);
 
   const [formData, setFormData] = useState({
@@ -67,15 +70,13 @@ export default function SignIn() {
       const data = await response.json();
       sessionStorage.setItem("accessToken", data.data.accessToken);
       sessionStorage.setItem("refreshToken", data.data.refreshToken);
+      sessionStorage.setItem("userId", data.data.user._id);
+      store.addMessage({ type: "Success", content: data.message });
       window.location.href = "/dashboard";
     } catch (error) {
       console.error("Error:", error);
-      if (error.message === "Invalid Access Token") {
-        //Redirect to login page or handle JWT expiration error
-        history.push("/login");
-      } else {
-        alert("Login failed. Please try again.");
-      }
+      store.addMessage({ type: "Danger", content: error.message });
+      history.push("/login");
     }
   };
 

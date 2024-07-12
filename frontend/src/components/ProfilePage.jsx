@@ -6,6 +6,7 @@ import config from "../config";
 import { useParams } from "react-router-dom";
 import Navbar from "./Navbar";
 import Newsletter from "./Newsletter";
+import store from "../store";
 
 const Profile = () => {
   const [user, setUser] = useState(null); // State to hold user data
@@ -14,7 +15,6 @@ const Profile = () => {
   const [questionPapers, setQuestionPapers] = useState([]);
   const [studyMaterials, setStudyMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const { username } = useParams();
 
   const followUser = async () => {
@@ -30,7 +30,7 @@ const Profile = () => {
       user.followerCount = user.followerCount + 1;
       setUser({ ...user });
     } catch (err) {
-      console.log(err);
+      store.addMessage({ type: "Danger", content: err.message });
     }
   };
 
@@ -47,7 +47,7 @@ const Profile = () => {
       user.followerCount = user.followerCount - 1;
       setUser({ ...user });
     } catch (err) {
-      console.log(err);
+      store.addMessage({ type: "Danger", content: err.message });
     }
   };
 
@@ -77,7 +77,7 @@ const Profile = () => {
         setStudyMaterials(data.data.items.studyMaterials);
         setLoading(false);
       } catch (err) {
-        setError(err);
+        store.addMessage({ type: "Danger", content: err.message });
         setLoading(false);
       }
     };
@@ -87,10 +87,6 @@ const Profile = () => {
 
   if (loading) {
     return <Loading />;
-  }
-
-  if (error) {
-    return <div>Error: {error.message}</div>;
   }
 
   return (
@@ -136,6 +132,7 @@ const Profile = () => {
                     : "text-white py-2 px-4 uppercase rounded bg-blue-400 hover:bg-blue-500 shadow hover:shadow-lg font-medium transition transform hover:-translate-y-0.5"
                 }
                 onClick={user.isFollowing ? unfollowUser : followUser}
+                hidden={user.disableButton}
               >
                 {user.isFollowing ? "Unfollow" : "Follow"}
               </button>

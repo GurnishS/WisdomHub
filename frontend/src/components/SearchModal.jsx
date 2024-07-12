@@ -40,6 +40,7 @@ const Modal = ({ modalOpenSearch = false, setModalOpenSearch }) => {
   const handleChange = (e) => {
     const keyword = e.target.value;
     const payload = { keyword };
+    setResults([]);
     setLoading(true);
     const accessToken = sessionStorage.getItem("accessToken");
     fetch(config.apiUrl + "users/search-user", {
@@ -56,7 +57,7 @@ const Modal = ({ modalOpenSearch = false, setModalOpenSearch }) => {
         setLoading(false);
       })
       .catch((err) => {
-        console.log(err);
+        store.addMessage({ type: "Danger", content: err.message });
         setLoading(false);
       });
   };
@@ -178,9 +179,13 @@ const Modal = ({ modalOpenSearch = false, setModalOpenSearch }) => {
                       </div>
                       <button
                         type="button"
-                        className="text-white bg-blue-500 hover:bg-blue-600 rounded-lg px-4 py-2"
+                        className={
+                          result.isFollowing
+                            ? "text-white rounded-lg px-4 py-2 bg-gray-500 hover:bg-gray-600"
+                            : "text-white rounded-lg px-4 py-2 bg-blue-500 hover:bg-blue-600"
+                        }
                       >
-                        Follow
+                        {result.isFollowing ? "UnFollow" : "Follow"}
                       </button>
                     </div>
                   ))}

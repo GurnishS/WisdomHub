@@ -20,7 +20,7 @@ router
   .post(upload.fields([{ name: "avatar", maxCount: 1 }]), registerUser);
 
 router.route("/login").post(loginUser);
-router.route("/search-user").post(searchUser);
+router.route("/search-user").post(verifyJWT, searchUser);
 router.route("/logout").post(verifyJWT, logoutUser);
 router.route("/current-user").post(verifyJWT, getCurrentUser);
 router.route("/check-username-exists").post(checkUsernameExists);

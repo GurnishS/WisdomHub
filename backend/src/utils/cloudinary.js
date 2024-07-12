@@ -22,20 +22,4 @@ const uploadOnCloudinary = async (localFilePath) => {
   }
 };
 
-const uploadOnCloudinaryDirect = async (localFilePath) => {
-  try {
-    if (!localFilePath) return null;
-    const uploadedResponse = await cloudinary.uploader.upload_stream(
-      localFilePath,
-      {
-        resource_type: "auto",
-      }
-    );
-    return uploadedResponse;
-  } catch (err) {
-    console.log("Error while uploading to cloudinary:", err);
-    return null;
-  }
-};
-
-export { uploadOnCloudinary, uploadOnCloudinaryDirect };
+export { uploadOnCloudinary };
