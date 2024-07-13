@@ -64,6 +64,7 @@ export default function SignIn() {
       });
 
       if (!response.ok) {
+        setLoading(false);
         throw new Error("Network response was not ok");
       }
 
@@ -83,13 +84,13 @@ export default function SignIn() {
   return (
     <>
       {loading && <Loading />}
-      <section className="grid grid-cols-1 lg:grid-cols-2 lg:py-32">
+      <section className="grid grid-cols-1 lg:grid-cols-2 lg:py-32 lg:pl-4">
         {/* Left side content (image and features) */}
         <div className="relative flex items-end px-4 pb-10 pt-60 sm:px-6 sm:pb-16 md:justify-center lg:px-8 lg:pb-24">
           <div className="absolute inset-0">
             <img
               className="h-full w-full rounded-md object-cover object-top"
-              src="https://images.unsplash.com/photo-1534120247760-c44c3e4a62f1?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MTk0fHxkZXNpZ25lcnxlbnwwfHwwfHw%3D&auto=format&fit=crop&w=800&q=60"
+              src="https://images.pexels.com/photos/4560076/pexels-photo-4560076.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
               alt=""
             />
           </div>
@@ -97,7 +98,7 @@ export default function SignIn() {
           <div className="relative">
             <div className="w-full max-w-xl xl:mx-auto xl:w-full xl:max-w-xl xl:pr-24">
               <h3 className="text-4xl font-bold text-white">
-                Now you don't have to rely on your designer to create a new page
+                Sign to kickstart your exam preparation with our
               </h3>
               <ul className="mt-10 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
                 <li className="flex items-center space-x-3">
@@ -116,7 +117,7 @@ export default function SignIn() {
                     </svg>
                   </div>
                   <span className="text-lg font-medium text-white">
-                    Commercial License
+                    Question Papers
                   </span>
                 </li>
                 <li className="flex items-center space-x-3">
@@ -135,7 +136,7 @@ export default function SignIn() {
                     </svg>
                   </div>
                   <span className="text-lg font-medium text-white">
-                    Unlimited Exports
+                    Free Books
                   </span>
                 </li>
                 <li className="flex items-center space-x-3">
@@ -154,7 +155,7 @@ export default function SignIn() {
                     </svg>
                   </div>
                   <span className="text-lg font-medium text-white">
-                    120+ Coded Blocks
+                    Study Materials
                   </span>
                 </li>
                 <li className="flex items-center space-x-3">
@@ -173,7 +174,7 @@ export default function SignIn() {
                     </svg>
                   </div>
                   <span className="text-lg font-medium text-white">
-                    Design Files Included
+                    Expert Guidance
                   </span>
                 </li>
               </ul>

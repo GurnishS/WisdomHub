@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Loading from "./Loading";
-import { SuccessToast, DangerToast, WarningToast } from "./Notification";
 import config from "../config";
+import store from "../store";
 
 const Modal = ({ modalOpen = false, setModalOpen }) => {
   const [uploadType, setUploadType] = useState("Book");

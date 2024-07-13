@@ -183,6 +183,7 @@ const RegisterForm = () => {
                         id="avatar"
                         accept="image/*"
                         onChange={handleChange}
+                        required
                       />
                     </div>
                   </div>
@@ -202,6 +203,7 @@ const RegisterForm = () => {
                         placeholder="Username"
                         value={formData.username}
                         onChange={handleChange}
+                        required
                       />
                       {checkUsernameState === "Xmark" && <Xmark />}
                       {checkUsernameState === "Check" && <Check />}
@@ -224,6 +226,7 @@ const RegisterForm = () => {
                         placeholder="Full Name"
                         value={formData.fullName}
                         onChange={handleChange}
+                        required
                       />
                     </div>
                   </div>
@@ -243,6 +246,7 @@ const RegisterForm = () => {
                         placeholder="Email"
                         value={formData.email}
                         onChange={handleChange}
+                        required
                       />
                     </div>
                   </div>
@@ -262,6 +266,7 @@ const RegisterForm = () => {
                         placeholder="Institute"
                         value={formData.institute}
                         onChange={handleChange}
+                        required
                       />
                     </div>
                   </div>
@@ -301,6 +306,7 @@ const RegisterForm = () => {
                         id="password"
                         placeholder="Password"
                         value={formData.password}
+                        required
                         onChange={handleChange}
                       />
                     </div>
@@ -321,8 +327,8 @@ const RegisterForm = () => {
           </div>
           <div className="h-full w-full">
             <img
-              className="mx-auto h-full w-full rounded-md object-cover"
-              src="https://images.unsplash.com/photo-1559526324-4b87b5e36e44?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1742&q=80"
+              className="mx-auto h-full w-full rounded-md object-cover p-4"
+              src="https://images.pexels.com/photos/3380743/pexels-photo-3380743.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
               alt="Registration background"
             />
           </div>

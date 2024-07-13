@@ -6,6 +6,7 @@ import config from "../config";
 import { useParams } from "react-router-dom";
 import Navbar from "./Navbar";
 import Newsletter from "./Newsletter";
+import ProfileEditForm from "./ProfileEditForm";
 import store from "../store";
 
 const Profile = () => {
@@ -16,6 +17,7 @@ const Profile = () => {
   const [studyMaterials, setStudyMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
   const { username } = useParams();
+  const [modalOpen, setModalOpen] = useState(false);
 
   const followUser = async () => {
     try {
@@ -91,8 +93,15 @@ const Profile = () => {
 
   return (
     <>
+      {modalOpen && (
+        <ProfileEditForm
+          modalOpen={modalOpen}
+          setModalOpen={setModalOpen}
+          userProfile={user}
+        />
+      )}
       <Navbar />
-      <div className="p-16">
+      <div className="p-8 lg:p-16">
         <div className="p-8 bg-gray-100 shadow mt-24 rounded-lg ">
           <div className="grid grid-cols-1 md:grid-cols-3">
             <div className="grid grid-cols-3 text-center order-last md:order-first mt-20 md:mt-0">
@@ -135,6 +144,15 @@ const Profile = () => {
                 hidden={user.disableButton}
               >
                 {user.isFollowing ? "Unfollow" : "Follow"}
+              </button>
+              <button
+                className="text-white py-2 px-4 uppercase rounded bg-blue-400 hover:bg-blue-500 shadow hover:shadow-lg font-medium transition transform hover:-translate-y-0.5"
+                hidden={!user.disableButton}
+                onClick={() => {
+                  setModalOpen(true);
+                }}
+              >
+                Edit
               </button>
             </div>
           </div>

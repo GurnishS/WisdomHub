@@ -11,6 +11,11 @@ import { useState } from "react";
 
 export default function Dashboard({ page = "Dashboard" }) {
   const [currentPage, setCurrentPage] = useState(page);
+  const savedPage = sessionStorage.getItem("currentPage");
+  if (savedPage) {
+    setCurrentPage(savedPage);
+    sessionStorage.removeItem("currentPage");
+  }
   const pages = ["Question Papers", "Books", "Study Materials"];
   return (
     <>

@@ -187,38 +187,57 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 });
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
-  const { fullName, email } = req.body;
-  if (!fullName || !email) {
-    throw new ApiError(400, "Full name and email are required");
-  }
-  const user = await User.findByIdAndUpdate(
-    req.user._id,
-    { $set: { fullName, email } },
-    { new: true }
-  ).select("-password");
-  return res
-    .status(200)
-    .json(new ApiResponse(200, user, "Account details updated"));
-});
+  const { fullName, email, username, role, institute } = req.body;
+  const avatarLocalPath = req.files?.avatar[0]?.path;
 
-const updateUserAvatar = asyncHandler(async (req, res) => {
-  const avatarLocalPath = req.file?.path;
-  if (!avatarLocalPath) {
-    throw new ApiError(400, "Avatar is required");
+  // Check if any required fields are empty
+  if (
+    [fullName, email, username, institute, role].some(
+      (field) => field.trim() === ""
+    )
+  ) {
+    throw new ApiError(400, "Please fill all fields");
   }
 
-  const avatar = await uploadOnCloudinary(avatarLocalPath);
-  if (!avatar) {
-    throw new ApiError(500, "Something went wrong while uploading avatar");
+  try {
+    // Upload avatar to Cloudinary if an avatar file is provided
+    if (avatarLocalPath) {
+      const avatar = await uploadOnCloudinary(avatarLocalPath);
+      if (!avatar) {
+        throw new ApiError(500, "Something went wrong while uploading avatar");
+      }
+      // Update user's avatar URL in the database
+      await User.findByIdAndUpdate(
+        req.user._id,
+        { $set: { avatar: avatar.secure_url } },
+        { new: true }
+      );
+    }
+
+    // Update user's details in the database
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        $set: {
+          fullName,
+          email,
+          username,
+          role,
+          institute,
+        },
+      },
+      { new: true }
+    ).select("-password");
+
+    // Respond with the updated user object and success message
+    return res
+      .status(200)
+      .json(new ApiResponse(200, updatedUser, "Account details updated"));
+  } catch (error) {
+    // Handle any errors that occur during avatar upload or database update
+    console.error("Error updating account details:", error.message);
+    throw new ApiError(500, "Failed to update account details");
   }
-
-  const user = await User.findByIdAndUpdate(
-    req.user._id,
-    { $set: { avatar: avatar.secure_url } },
-    { new: true }
-  ).select("avatar username fullName");
-
-  return res.status(200).json(new ApiResponse(200, user, "Avatar updated"));
 });
 
 const getUserProfile = asyncHandler(async (req, res) => {
@@ -454,7 +473,6 @@ const searchUser = asyncHandler(async (req, res) => {
     },
   ]);
 
-  console.log(users);
   return res.status(200).json(new ApiResponse(200, users, "Search Results"));
 });
 
@@ -468,4 +486,5 @@ export {
   searchUser,
   followUser,
   unfollowUser,
+  updateAccountDetails,
 };

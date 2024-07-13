@@ -87,7 +87,7 @@ export default function Example({ currentPage, setCurrentPage }) {
           )}
 
           {/* Navbar content */}
-          <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl px-2 sm:px-2 lg:px-8">
             <div className="relative flex h-16 items-center justify-between">
               {/* Mobile menu button */}
               <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
@@ -104,8 +104,13 @@ export default function Example({ currentPage, setCurrentPage }) {
               {/* Company logo */}
               <div className="flex flex-shrink-0 items-center">
                 <img
-                  className="h-12 w-auto ml-8 sm:ml-0 lg:ml-0 "
+                  className="h-12 ml-8 sm:ml-0 lg:ml-0 hidden lg:block"
                   src="/logo.png"
+                  alt="Your Company"
+                />
+                <img
+                  className="h-12 ml-10 sm:ml-0 lg:ml-0 lg:hidden"
+                  src="/cap.png"
                   alt="Your Company"
                 />
               </div>
@@ -116,13 +121,18 @@ export default function Example({ currentPage, setCurrentPage }) {
                     <a
                       key={item.name}
                       onClick={() => {
-                        setCurrentPage(item.name);
+                        try {
+                          setCurrentPage(item.name);
+                        } catch (err) {
+                          sessionStorage.setItem("currentPage", item.name);
+                          window.location.href = "/dashboard";
+                        }
                       }}
                       className={classNames(
                         item.name === currentPage
                           ? "bg-black text-white"
                           : "text-gray-300 hover:bg-gray-700 hover:text-white",
-                        "rounded-md px-3 py-2 text-sm font-medium"
+                        "rounded-md px-3 py-2 text-sm font-medium sm:text-center sm:px-0 flex items-center"
                       )}
                       aria-current={
                         item.name === currentPage ? "page" : undefined

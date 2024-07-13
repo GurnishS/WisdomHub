@@ -9,6 +9,7 @@ import {
   searchUser,
   followUser,
   unfollowUser,
+  updateAccountDetails,
 } from "../controllers/user.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -22,6 +23,13 @@ router
 router.route("/login").post(loginUser);
 router.route("/search-user").post(verifyJWT, searchUser);
 router.route("/logout").post(verifyJWT, logoutUser);
+router
+  .route("/update-profile")
+  .post(
+    verifyJWT,
+    upload.fields([{ name: "avatar", maxCount: 1 }]),
+    updateAccountDetails
+  );
 router.route("/current-user").post(verifyJWT, getCurrentUser);
 router.route("/check-username-exists").post(checkUsernameExists);
 router.route("/get-user-profile").post(verifyJWT, getUserProfile);
