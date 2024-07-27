@@ -12,22 +12,18 @@ import { QuestionPaper } from "../models/questionPaper.model.js";
 const uploadBook = asyncHandler(async (req, res, file) => {
   const { title, author, publisher } = req.body;
   if ([title, author, publisher].some((field) => !field.trim())) {
-    throw new ApiError(400, "Please fill all fields"); //todo:map this in frontend
+    throw new ApiError(400, "Please fill all fields");
   }
-
   try {
     const existedBook = await Book.findOne({ title });
     if (existedBook) {
-      throw new ApiError(400, "Titled book already exists"); //todo:map this in frontend
+      throw new ApiError(400, "Titled book already exists");
     }
-
     const bookLocalPath = req.files?.book[0]?.path;
     if (!bookLocalPath) {
-      throw new ApiError(400, "PDF is required"); //todo:map this in frontend
+      throw new ApiError(400, "PDF is required");
     }
-
     const book = await uploadOnCloudinary(bookLocalPath);
-
     const bookObject = await Book.create({
       title,
       author,
@@ -38,29 +34,25 @@ const uploadBook = asyncHandler(async (req, res, file) => {
 
     const createdBook = await Book.findById(bookObject._id);
     if (!createdBook) {
-      throw new ApiError(
-        500,
-        "Something went wrong while object" //todo:map this in frontend
-      );
+      throw new ApiError(500, "Something went wrong while creating object");
     }
     return res
       .status(201)
-      .json(new ApiResponse(200, createdBook, "Book uploaded successfully")); //todo:map this in frontend
+      .json(new ApiResponse(200, createdBook, "Book uploaded successfully"));
   } catch (error) {
-    throw new ApiError(500, "Something went wrong while uploading PDF"); //todo:map this in frontend
+    throw new ApiError(500, "Something went wrong while uploading Book");
   }
 });
 
 const uploadQuestionPaper = asyncHandler(async (req, res, file) => {
   const { title, subject, institute, yearOfExam } = req.body;
-  console.log(title, subject, institute, yearOfExam);
   if ([title, subject, institute, yearOfExam].some((field) => !field.trim())) {
-    throw new ApiError(400, "Please fill all fields"); //todo:map this in frontend
+    throw new ApiError(400, "Please fill all fields");
   }
   try {
     const existedQuestionPaper = await QuestionPaper.findOne({ title });
     if (existedQuestionPaper) {
-      throw new ApiError(400, "Titled question paper already exists"); //todo:map this in frontend
+      throw new ApiError(400, "Titled question paper already exists");
     }
     const questionPaperLocalPath = req.files?.questionPaper[0]?.path;
     if (!questionPaperLocalPath) {
@@ -79,7 +71,7 @@ const uploadQuestionPaper = asyncHandler(async (req, res, file) => {
       questionPaperObject._id
     );
     if (!createdQuestionPaper) {
-      throw new ApiError(500, "Something went wrong while object");
+      throw new ApiError(500, "Something went wrong while creating object");
     }
     return res
       .status(201)
@@ -91,7 +83,10 @@ const uploadQuestionPaper = asyncHandler(async (req, res, file) => {
         )
       );
   } catch (error) {
-    throw new ApiError(500, "Something went wrong while uploading PDF");
+    throw new ApiError(
+      500,
+      "Something went wrong while uploading Question Paper"
+    );
   }
 });
 
@@ -112,7 +107,6 @@ const uploadStudyMaterial = asyncHandler(async (req, res, file) => {
       throw new ApiError(400, "PDF is required");
     }
     const studyMaterial = await uploadOnCloudinary(studyMaterialLocalPath);
-    console.log("Study Material:", studyMaterial);
     const studyMaterialObject = await StudyMaterial.create({
       title,
       institute,
@@ -175,17 +169,15 @@ const likeItem = asyncHandler((req, res) => {
       return item.save();
     })
     .then((item) => {
-      return res.status(200).json(new ApiResponse(200, item, "Success"));
+      return res.status(200).json(new ApiResponse(200, {}, "Success"));
     })
     .catch((error) => {
-      console.error("Error liking item:", error);
       throw new ApiError(500, "Something went wrong while liking item");
     });
 });
 
 const viewedItem = asyncHandler((req, res) => {
   const { id, type } = req.body;
-  console.log(id, type);
   let model;
   switch (type) {
     case "Books":
@@ -210,11 +202,13 @@ const viewedItem = asyncHandler((req, res) => {
       return item.save();
     })
     .then((item) => {
-      return res.status(200).json(new ApiResponse(200, item, "Success"));
+      return res.status(200).json(new ApiResponse(200, {}, "Success"));
     })
     .catch((error) => {
-      console.error("Error increasing view count", error);
-      throw new ApiError(500, "Something went wrong");
+      throw new ApiError(
+        500,
+        "Something went wrong while increamenting view count"
+      );
     });
 });
 
@@ -222,25 +216,21 @@ const getBooks = asyncHandler(async (req, res) => {
   try {
     // Fetch all books
     const books = await Book.find();
-
     // Extract all unique user IDs from books
     const userIds = [...new Set(books.map((book) => book.uploadedBy))];
-
     // Fetch all users corresponding to the userIds and select only username and avatar
     const users = await User.find({ _id: { $in: userIds } }).select(
       "username avatar fullName"
     );
-
     // Map users to a map for quick lookup
     const userMap = users.reduce((acc, user) => {
       acc[user._id] = user;
       return acc;
     }, {});
-
     // Map each book to include the corresponding user's username and avatar
     const booksWithUsers = books.map((book) => ({
       ...book.toObject(),
-      userId: book.uploadedBy, // Assuming you also want to keep the uploadedBy ID
+      userId: book.uploadedBy,
       username: userMap[book.uploadedBy].username,
       avatar: userMap[book.uploadedBy].avatar,
       fullName: userMap[book.uploadedBy].fullName,
@@ -249,10 +239,9 @@ const getBooks = asyncHandler(async (req, res) => {
     // Respond with the modified books array
     return res
       .status(200)
-      .json(new ApiResponse(200, booksWithUsers, "Success"));
+      .json(new ApiResponse(200, booksWithUsers, "Successfully fetched books"));
   } catch (error) {
-    console.error("Error getting books:", error);
-    throw new ApiError(500, "Something went wrong while getting books");
+    throw new ApiError(500, "Something went wrong while fetching books");
   }
 });
 
@@ -345,7 +334,6 @@ const getQuestionPaper = asyncHandler(async (req, res) => {
         )
       );
   } catch (error) {
-    console.error("Error getting questionPapers:", error);
     throw new ApiError(
       500,
       "Something went wrong while fetching questionPapers"

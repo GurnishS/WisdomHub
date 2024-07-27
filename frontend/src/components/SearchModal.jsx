@@ -1,21 +1,10 @@
 import React, { useEffect, useState } from "react";
-import Loading from "./Loading";
-import { SuccessToast, DangerToast, WarningToast } from "./Notification";
-import config from "../config";
+import { ApiHandler } from "../utils/ApiHandler";
 
 const Modal = ({ modalOpenSearch = false, setModalOpenSearch }) => {
-  const [uploadType, setUploadType] = useState("Book");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
 
-  useEffect(() => {
-    // Set overflow hidden when loading
-    if (loading) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-  }, [loading]);
   const handleClose = () => {
     const modal = document.getElementById("modal-upload-form");
     const backFilm = document.getElementById("back-film");
@@ -42,22 +31,12 @@ const Modal = ({ modalOpenSearch = false, setModalOpenSearch }) => {
     const payload = { keyword };
     setResults([]);
     setLoading(true);
-    const accessToken = sessionStorage.getItem("accessToken");
-    fetch(config.apiUrl + "users/search-user", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(payload), // Send payload as JSON
-    })
-      .then((res) => res.json())
+    ApiHandler("users/search-user", "POST", payload, false)
       .then((data) => {
         setResults(data.data);
         setLoading(false);
       })
       .catch((err) => {
-        store.addMessage({ type: "Danger", content: err.message });
         setLoading(false);
       });
   };

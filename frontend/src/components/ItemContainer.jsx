@@ -1,8 +1,8 @@
 import PdfContainer from "./PdfContainer";
 import { Heart, Menu } from "./FontIcons";
 import { useState } from "react";
-import config from "../config";
 import store from "../store";
+import { SimpleApiHandler, ApiHandler } from "../utils/ApiHandler";
 
 export default function ItemContainer({ heading, item }) {
   const userId = sessionStorage.getItem("userId");
@@ -14,48 +14,40 @@ export default function ItemContainer({ heading, item }) {
 
   const incrementViews = () => {
     setViews(views + 1);
-    try {
-      fetch(config.apiUrl + "files/view", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: item._id,
-          type: heading,
-        }),
-      });
-      window.open(item.pdfLink, "_blank");
-    } catch (err) {
-      store.addMessage({ type: "Danger", content: err.message });
-    }
+    SimpleApiHandler(
+      "files/view",
+      "POST",
+      {
+        id: item._id,
+        type: heading,
+      },
+      false
+    ).then(window.open(item.pdfLink, "_blank"));
   };
 
   const handleLike = () => {
-    try {
-      const accessToken = sessionStorage.getItem("accessToken");
+    if (liked) {
+      setLikes(likes - 1);
+    } else {
+      setLikes(likes + 1);
+    }
+    setLiked(!liked);
+    ApiHandler(
+      "files/like",
+      "POST",
+      {
+        id: item._id,
+        type: heading,
+      },
+      false
+    ).catch((err) => {
       setLiked(!liked);
-      if (liked) {
+      if (!liked) {
         setLikes(likes - 1);
       } else {
         setLikes(likes + 1);
       }
-
-      fetch(config.apiUrl + "files/like", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          id: item._id,
-          type: heading,
-        }),
-      });
-    } catch (err) {
-      setLiked(!liked);
-      store.addMessage({ type: "Danger", content: err.message });
-    }
+    });
   };
 
   return (

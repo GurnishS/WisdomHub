@@ -2,17 +2,16 @@ import React, { useState, useEffect } from "react";
 import Pagination from "./Pagination";
 import SearchBox from "./SearchBox";
 import ItemContainer from "./ItemContainer";
-import store from "../store";
+import { SimpleApiHandler } from "../utils/ApiHandler.js";
 
 const navigation = {
   "Question Papers": "/get-question-papers",
   Books: "/get-books",
   "Study Materials": "/get-study-materials",
 };
-import config from "./../config.js";
 
 export default function ListPage({ heading }) {
-  const fetchUrl = `${config.apiUrl}files${navigation[heading]}`;
+  const fetchUrl = `files${navigation[heading]}`;
   const [items, setItems] = useState([]);
   const [pageNumber, setPageNumber] = useState(1);
   const itemsPerPage = 8;
@@ -52,7 +51,6 @@ export default function ListPage({ heading }) {
       }
       return results;
     } catch (error) {
-      console.error("Error searching in JSON object:", error);
       return [];
     }
   };
@@ -101,31 +99,13 @@ export default function ListPage({ heading }) {
   useEffect(() => {
     setPageNumber(1);
   }, [heading]);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const accessToken = sessionStorage.getItem("accessToken");
-        const response = await fetch(fetchUrl, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-        if (!response.ok) {
-          store.addMessage({ type: "Danger", content: "Network response was not ok" });
-          throw new Error("Failed to fetch data");
-        }
-        const data = await response.json();
-        setItems(sortObjectByTitle(data.data, "title")); // Assuming data is an array of items
-        setItemsCopy(data.data);
-      } catch (error) {
-        store.addMessage({ type: "Danger", content: error.message });
-      }
-    };
 
-    fetchData();
-  }, [fetchUrl]); // useEffect dependency updated to fetchUrl
+  useEffect(() => {
+    SimpleApiHandler(fetchUrl, "GET", {}, false).then((data) => {
+      setItems(data.data);
+      setItemsCopy(data.data);
+    });
+  }, [fetchUrl]);
 
   // Calculate the current page's items based on pageNumber
   const currentPageItems = items.slice(

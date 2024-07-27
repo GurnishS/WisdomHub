@@ -7,14 +7,15 @@ const Modal = ({ modalOpen = false, setModalOpen }) => {
   const [uploadType, setUploadType] = useState("Book");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // Set overflow hidden when loading
-    if (loading) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-  }, [loading]);
+  // useEffect(() => {
+  //   // Set overflow hidden when loading
+  //   if (loading) {
+  //     document.body.style.overflow = "hidden";
+  //   } else {
+  //     document.body.style.overflow = "auto";
+  //   }
+  // }, [loading]);
+
   const handleClose = () => {
     const modal = document.getElementById("modal-upload-form");
     const backFilm = document.getElementById("back-film");
@@ -71,6 +72,8 @@ const Modal = ({ modalOpen = false, setModalOpen }) => {
         body: formData,
       });
 
+      const data = response.json();
+      console.log("Data", data);
       setLoading(false);
       store.addMessage({ type: "Success", content: response.data.message });
       if (!response.ok) {

@@ -1,39 +1,54 @@
 import React, { useState, useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 import Loading from "./Loading";
-import config from "../config";
 import store from "../store";
+import config from "../config";
+import { useSearchParams } from "react-router-dom";
+import { SimpleApiHandler, ApiHandler } from "../utils/ApiHandler";
+
 export default function SignIn() {
   const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
+  const tempToken = searchParams.get("token");
 
   useEffect(() => {
-    // Set overflow hidden when loading
-    if (loading) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-  }, [loading]);
-
-  useEffect(() => {
-    const accessToken = sessionStorage.getItem("accessToken");
-    if (accessToken) {
-      fetch(config.apiUrl + "users/current-user", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      })
-        .then((res) => res.json())
+    if (tempToken) {
+      SimpleApiHandler(
+        "users/fetch-user-data",
+        "POST",
+        { token: tempToken },
+        false
+      )
         .then((data) => {
-          store.addMessage({ type: "Success", content: "Login Success" });
+          store.addMessage({
+            type: "Success",
+            content: "Login Success",
+          });
+          sessionStorage.setItem("accessToken", data.accessToken);
+          sessionStorage.setItem("userId", data.userId);
+          localStorage.setItem("refreshToken", data.refreshToken);
           window.location.href = "/dashboard";
         })
-        .catch((err) => {
-          console.log(err);
-          store.addMessage({ type: "Danger", content: err.message });
+        .catch((error) => {
+          window.location.href = "/login";
         });
+    }
+  }, [tempToken]);
+
+  // useEffect(() => {
+  //   if (loading) {
+  //     document.body.style.overflow = "hidden";
+  //   } else {
+  //     document.body.style.overflow = "auto";
+  //   }
+  // }, [loading]);
+
+  useEffect(() => {
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (refreshToken) {
+      ApiHandler("users/current-user", "POST").then((data) => {
+        window.location.href = "/dashboard";
+      });
     }
   }, []);
 
@@ -53,32 +68,19 @@ export default function SignIn() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
-    try {
-      const response = await fetch(config.apiUrl + "users/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
+    SimpleApiHandler("users/login", "POST", formData)
+      .then((data) => {
+        sessionStorage.setItem("accessToken", data.data.accessToken);
+        localStorage.setItem("refreshToken", data.data.refreshToken);
+        sessionStorage.setItem("userId", data.data.user._id);
+        window.location.href = "/dashboard";
+      })
+      .catch((error) => {
+        history.push("/login");
+      })
+      .finally(() => {
         setLoading(false);
-        throw new Error("Network response was not ok");
-      }
-
-      const data = await response.json();
-      sessionStorage.setItem("accessToken", data.data.accessToken);
-      sessionStorage.setItem("refreshToken", data.data.refreshToken);
-      sessionStorage.setItem("userId", data.data.user._id);
-      store.addMessage({ type: "Success", content: data.message });
-      window.location.href = "/dashboard";
-    } catch (error) {
-      console.error("Error:", error);
-      store.addMessage({ type: "Danger", content: error.message });
-      history.push("/login");
-    }
+      });
   };
 
   return (
@@ -256,6 +258,28 @@ export default function SignIn() {
                     className="inline-flex w-full items-center justify-center rounded-md bg-black px-3.5 py-2.5 font-semibold leading-7 text-white hover:bg-black/80"
                   >
                     Get started <ArrowRight className="ml-2" size={16} />
+                  </button>
+                </div>
+                <div className="mt-3 space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      window.location.href =
+                        config.apiUrl + "users/auth/google";
+                    }}
+                    className="relative inline-flex w-full items-center justify-center rounded-md border border-gray-400 bg-white px-3.5 py-2.5 font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-100 hover:text-black focus:bg-gray-100 focus:text-black focus:outline-none"
+                  >
+                    <span className="mr-2 inline-block">
+                      <svg
+                        className="h-6 w-6 text-rose-500"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M20.283 10.356h-8.327v3.451h4.792c-.446 2.193-2.313 3.453-4.792 3.453a5.27 5.27 0 0 1-5.279-5.28 5.27 5.27 0 0 1 5.279-5.279c1.259 0 2.397.447 3.29 1.178l2.6-2.599c-1.584-1.381-3.615-2.233-5.89-2.233a8.908 8.908 0 0 0-8.934 8.934 8.907 8.907 0 0 0 8.934 8.934c4.467 0 8.529-3.249 8.529-8.934 0-.528-.081-1.097-.202-1.625z"></path>
+                      </svg>
+                    </span>
+                    Sign in with Google
                   </button>
                 </div>
               </div>

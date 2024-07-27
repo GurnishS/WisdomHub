@@ -2,12 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Email } from "./FontIcons";
 import ProfileList from "./ProfileList";
 import Loading from "./Loading";
-import config from "../config";
 import { useParams } from "react-router-dom";
 import Navbar from "./Navbar";
-import Newsletter from "./Newsletter";
+import Footer from "./Footer";
 import ProfileEditForm from "./ProfileEditForm";
-import store from "../store";
+import {ApiHandler } from "../utils/ApiHandler";
 
 const Profile = () => {
   const [user, setUser] = useState(null); // State to hold user data
@@ -19,38 +18,48 @@ const Profile = () => {
   const { username } = useParams();
   const [modalOpen, setModalOpen] = useState(false);
 
-  const followUser = async () => {
-    try {
-      await fetch(config.apiUrl + "users/follow/" + user._id, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + sessionStorage.getItem("accessToken"),
-        },
-      });
+  const followUser = () => {
+    // try {
+    //   await fetch(config.apiUrl + "users/follow/" + user._id, {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //       Authorization: "Bearer " + sessionStorage.getItem("accessToken"),
+    //     },
+    //   });
+    //   user.isFollowing = true;
+    //   user.followerCount = user.followerCount + 1;
+    //   setUser({ ...user });
+    // } catch (err) {
+    //   store.addMessage({ type: "Danger", content: err.message });
+    // }
+    ApiHandler("users/follow" + user._id, "POST", {}, false).then((data) => {
       user.isFollowing = true;
       user.followerCount = user.followerCount + 1;
       setUser({ ...user });
-    } catch (err) {
-      store.addMessage({ type: "Danger", content: err.message });
-    }
+    });
   };
 
   const unfollowUser = async () => {
-    try {
-      await fetch(config.apiUrl + "users/unfollow/" + user._id, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + sessionStorage.getItem("accessToken"),
-        },
-      });
+    // try {
+    //   await fetch(config.apiUrl + "users/unfollow/" + user._id, {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //       Authorization: "Bearer " + sessionStorage.getItem("accessToken"),
+    //     },
+    //   });
+    //   user.isFollowing = false;
+    //   user.followerCount = user.followerCount - 1;
+    //   setUser({ ...user });
+    // } catch (err) {
+    //   store.addMessage({ type: "Danger", content: err.message });
+    // }
+    ApiHandler("users/unfollow/" + user._id, "POST", {}, false).then((data) => {
       user.isFollowing = false;
       user.followerCount = user.followerCount - 1;
       setUser({ ...user });
-    } catch (err) {
-      store.addMessage({ type: "Danger", content: err.message });
-    }
+    });
   };
 
   const normalCss =
@@ -60,30 +69,43 @@ const Profile = () => {
 
   useEffect(() => {
     const fetchProfileData = async () => {
-      try {
-        const accessToken = sessionStorage.getItem("accessToken");
-        const fetchAPI = username
-          ? config.apiUrl + "users/" + username
-          : config.apiUrl + "users/get-user-profile";
-        const res = await fetch(fetchAPI, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
+      // try {
+      //   const accessToken = sessionStorage.getItem("accessToken");
+      //   const fetchAPI = username
+      //     ? config.apiUrl + "users/" + username
+      //     : config.apiUrl + "users/get-user-profile";
+      //   const res = await fetch(fetchAPI, {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //       Authorization: `Bearer ${accessToken}`,
+      //     },
+      //   });
+      //   const data = await res.json();
+      //   setUser(data.data.userProfile[0]);
+      //   setQuestionPapers(data.data.items.questionPapers);
+      //   setBooks(data.data.items.books);
+      //   setStudyMaterials(data.data.items.studyMaterials);
+      //   setLoading(false);
+      // } catch (err) {
+      //   store.addMessage({ type: "Danger", content: err.message });
+      //   setLoading(false);
+      // }
+      const fetchAPI = username
+        ? "users/" + username
+        : "users/get-user-profile";
+      ApiHandler(fetchAPI, "POST", {})
+        .then((data) => {
+          setUser(data.data.userProfile[0]);
+          setQuestionPapers(data.data.items.questionPapers);
+          setBooks(data.data.items.books);
+          setStudyMaterials(data.data.items.studyMaterials);
+          setLoading(false);
+        })
+        .catch((err) => {
+          setLoading(false);
         });
-        const data = await res.json();
-        setUser(data.data.userProfile[0]);
-        setQuestionPapers(data.data.items.questionPapers);
-        setBooks(data.data.items.books);
-        setStudyMaterials(data.data.items.studyMaterials);
-        setLoading(false);
-      } catch (err) {
-        store.addMessage({ type: "Danger", content: err.message });
-        setLoading(false);
-      }
     };
-
     fetchProfileData();
   }, []);
 
@@ -219,7 +241,7 @@ const Profile = () => {
           />
         )}
       </div>
-      <Newsletter />
+      <Footer />
     </>
   );
 };

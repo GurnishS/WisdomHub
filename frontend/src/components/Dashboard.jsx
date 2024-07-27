@@ -1,16 +1,13 @@
 import Navbar from "./Navbar.jsx";
-import Footer from "./Footer.jsx";
-import Newsletter from "./Newsletter.jsx";
+import Newsletter from "./Footer.jsx";
 import Herosection from "./Herosection.jsx";
 import Featuresection from "./Featuresection.jsx";
 import Exploresection from "./Exploresection.jsx";
-import PdfContainer from "./PdfContainer.jsx";
-import LoadingScreen from "./Loading.jsx";
 import ListPage from "./ListPage.jsx";
 import { useState } from "react";
 
-export default function Dashboard({ page = "Dashboard" }) {
-  const [currentPage, setCurrentPage] = useState(page);
+export default function Dashboard() {
+  const [currentPage, setCurrentPage] = useState("Dashboard");
   const savedPage = sessionStorage.getItem("currentPage");
   if (savedPage) {
     setCurrentPage(savedPage);

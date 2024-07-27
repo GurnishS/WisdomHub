@@ -9,13 +9,12 @@ import {
   MenuItems,
   Transition,
 } from "@headlessui/react";
-import store from "../store";
 
 import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import UploadForm from "./UploadForm.jsx";
-import config from "../config.js";
 import { Search } from "./FontIcons.jsx";
 import SearchModal from "./SearchModal.jsx";
+import { ApiHandler } from "../utils/ApiHandler.js";
 
 const navigation = [
   { name: "Dashboard" },
@@ -33,43 +32,20 @@ export default function Example({ currentPage, setCurrentPage }) {
   const [modalOpenSearch, setModalOpenSearch] = useState(false);
   const [user, setUser] = useState(null); // State to hold user data
   useEffect(() => {
-    const accessToken = sessionStorage.getItem("accessToken");
-    if (accessToken) {
-      fetch(config.apiUrl + "users/current-user", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          setUser(data);
-        })
-        .catch((err) => {
-          store.addMessage({ type: "Danger", content: err.message });
-        });
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (refreshToken) {
+      ApiHandler("users/current-user", "POST", {}, false).then((data) => {
+        setUser(data);
+      });
     }
   }, []);
 
   const logout = () => {
-    const accessToken = sessionStorage.getItem("accessToken");
-    fetch(config.apiUrl + "users/logout", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        sessionStorage.removeItem("accessToken");
-        window.location.href = "/login";
-        // Update user state with fetched data
-      })
-      .catch((err) => {
-        store.addMessage({ type: "Danger", content: err.message });
-      });
+    ApiHandler("users/logout", "POST").then((data) => {
+      sessionStorage.removeItem("accessToken");
+      window.location.href = "/login";
+      // Update user state with fetched data
+    });
   };
 
   return (

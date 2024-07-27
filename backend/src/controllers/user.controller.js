@@ -1,11 +1,12 @@
 import jwt from "jsonwebtoken";
-
+import { sendOTP } from "../utils/sendEmail.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 import { User } from "../models/user.model.js";
+import { Validation } from "../models/validation.model.js";
 
 import { Book } from "./../models/book.model.js";
 import { QuestionPaper } from "./../models/questionPaper.model.js";
@@ -17,32 +18,88 @@ const generateAccessAndRefereshTokens = async (userId) => {
     const user = await User.findById(userId);
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
-
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
-
     return { accessToken, refreshToken };
   } catch (error) {
     throw new ApiError(500, "Something went wrong while generating tokens");
   }
 };
 
-const registerUser = asyncHandler(async (req, res) => {
-  const { fullName, email, password, username, institute, role } = req.body;
+const OTP_EXPIRATION_TIME = 5 * 60 * 1000; // 5 minutes
+const RESEND_TIMEOUT = 1 * 60 * 1000; // 1 minute
+
+const generateOTP = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const existingOtp = await Validation.findOne({ email });
   if (
-    [fullName, email, password, username, institute, role].some(
+    existingOtp &&
+    Date.now() - new Date(existingOtp.createdAt).getTime() < RESEND_TIMEOUT
+  ) {
+    const timeLeft =
+      RESEND_TIMEOUT - (Date.now() - new Date(existingOtp.createdAt).getTime());
+    throw new ApiError(
+      400,
+      `Please wait before requesting a new OTP:${timeLeft}`
+    );
+  }
+
+  if (existingOtp) {
+    await existingOtp.deleteOne();
+  }
+  const expiresAt = new Date(Date.now() + OTP_EXPIRATION_TIME);
+  const otpRecord = new Validation({ email, otp, expiresAt });
+  await otpRecord.save();
+  await sendOTP(email, otp);
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { RESEND_TIMEOUT }, "OTP sent successfully"));
+});
+
+const verifyOTP = asyncHandler(async (req, res) => {
+  const { email, otp } = req.body;
+  const otpRecord = await Validation.findOne({ email, otp });
+  if (!otpRecord) {
+    throw new ApiError(400, "Invalid OTP");
+  }
+  if (Date.now() > new Date(otpRecord.expiresAt).getTime()) {
+    await Validation.deleteOne({ email, otp });
+    throw new ApiError(400, "OTP has expired");
+  }
+  await otpRecord.updateOne({ isVerified: true });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { status: true }, "OTP verified"));
+});
+
+const registerUser = asyncHandler(async (req, res) => {
+  const { fullName, email, password, username, institute, role, googleId } =
+    req.body;
+  if (
+    [fullName, email, username, institute, role].some(
       (field) => field.trim() === ""
     )
   ) {
     throw new ApiError(400, "Please fill all fields");
   }
+  if (googleId == "" && password == "") {
+    throw new ApiError(400, "Please fill all fields");
+  }
+
   const existedUser = await User.findOne({ $or: [{ email }, { username }] });
 
   if (existedUser) {
     throw new ApiError(400, "Email or Username already exists");
   }
+  const isVerified =
+    googleId == ""
+      ? await Validation.findOne({ email, isVerified: true })
+      : true;
+  if (!isVerified) {
+    throw new ApiError(400, "Email is not verified");
+  }
   const avatarLocalPath = req.files?.avatar[0]?.path;
-
   if (!avatarLocalPath) {
     throw new ApiError(400, "Avatar is required");
   }
@@ -58,15 +115,14 @@ const registerUser = asyncHandler(async (req, res) => {
     email,
     password,
     username: username.toLowerCase(),
+    googleId,
   });
   const createdUser = await User.findById(user._id).select(
     "username email fullName institute role"
   );
-
   if (!createdUser) {
     throw new ApiError(500, "Something went wrong while registering the user");
   }
-
   return res
     .status(201)
     .json(new ApiResponse(200, createdUser, "User registered Successfully"));
@@ -74,32 +130,25 @@ const registerUser = asyncHandler(async (req, res) => {
 
 const loginUser = asyncHandler(async (req, res) => {
   const { email, username, password } = req.body;
-
   if (!username && !email) {
-    throw new ApiError(400, "username or email is required");
+    throw new ApiError(400, "Username or email is required");
   }
-
   const user = await User.findOne({
     $or: [{ username }, { email }],
   });
-
   if (!user) {
     throw new ApiError(404, "User does not exist");
   }
-
   const isPasswordValid = await user.isPasswordCorrect(password);
-
   if (!isPasswordValid) {
     throw new ApiError(401, "Invalid user credentials");
   }
-
   const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
     user._id
   );
   const loggedInUser = await User.findById(user._id).select(
     "username email fullName"
   );
-
   return res.status(200).json(
     new ApiResponse(
       200,
@@ -131,41 +180,34 @@ const logoutUser = asyncHandler(async (req, res) => {
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
-  const incomingRefreshToken = req.body.refreshToken;
-
+  const { refreshToken } = req.body;
+  const incomingRefreshToken = refreshToken;
   if (!incomingRefreshToken) {
     throw new ApiError(401, "Unauthorized request");
   }
-
   try {
     const decodedToken = jwt.verify(
       incomingRefreshToken,
       process.env.REFRESH_TOKEN_SECRET
     );
-
     const user = await User.findById(decodedToken?._id);
-
     if (!user) {
       throw new ApiError(401, "Invalid refresh token");
     }
-
     if (incomingRefreshToken !== user?.refreshToken) {
       throw new ApiError(401, "Refresh token is expired");
     }
-
-    const { accessToken, newRefreshToken } =
-      await generateAccessAndRefereshTokens(user._id);
-
+    let accessToken;
+    try {
+      accessToken = user.generateAccessToken();
+    } catch (error) {
+      throw new ApiError(500, "Something went wrong while generating tokens");
+    }
     return res
       .status(200)
-      .json(
-        new ApiResponse(
-          200,
-          { accessToken, refreshToken: newRefreshToken },
-          "Access token refreshed"
-        )
-      );
+      .json(new ApiResponse(200, { accessToken }, "Access token refreshed"));
   } catch (error) {
+    console.log(error);
     throw new ApiError(401, error?.message || "Invalid refresh token");
   }
 });
@@ -178,7 +220,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Password is incorrect");
   }
   user.password = newPassword;
-  user.save({ validateBeforeSave: false });
+  await user.save({ validateBeforeSave: false });
   return res.status(200).json(new ApiResponse(200, {}, "Password changed"));
 });
 
@@ -189,7 +231,6 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 const updateAccountDetails = asyncHandler(async (req, res) => {
   const { fullName, email, username, role, institute } = req.body;
   const avatarLocalPath = req.files?.avatar[0]?.path;
-
   // Check if any required fields are empty
   if (
     [fullName, email, username, institute, role].some(
@@ -198,7 +239,6 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
   ) {
     throw new ApiError(400, "Please fill all fields");
   }
-
   try {
     // Upload avatar to Cloudinary if an avatar file is provided
     if (avatarLocalPath) {
@@ -213,7 +253,6 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         { new: true }
       );
     }
-
     // Update user's details in the database
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
@@ -228,7 +267,6 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
       },
       { new: true }
     ).select("-password");
-
     // Respond with the updated user object and success message
     return res
       .status(200)
@@ -251,7 +289,6 @@ const getUserProfile = asyncHandler(async (req, res) => {
   if (!username?.trim()) {
     throw new ApiError(400, "Username is required");
   }
-
   const userProfile = await User.aggregate([
     {
       $match: {
@@ -314,11 +351,9 @@ const getUserProfile = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User not found");
   }
   const user = userProfile[0];
-
   const books = await Book.find({ uploadedBy: user._id });
   const questionPapers = await QuestionPaper.find({ uploadedBy: user._id });
   const studyMaterials = await StudyMaterial.find({ uploadedBy: user._id });
-
   return res
     .status(200)
     .json(
@@ -435,8 +470,6 @@ const searchUser = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("Keyword is required");
   }
-
-  // Search for users where the name or username contains the keyword (case-insensitive)
   const users = await User.aggregate([
     {
       $match: {
@@ -472,7 +505,6 @@ const searchUser = asyncHandler(async (req, res) => {
       },
     },
   ]);
-
   return res.status(200).json(new ApiResponse(200, users, "Search Results"));
 });
 
@@ -487,4 +519,7 @@ export {
   followUser,
   unfollowUser,
   updateAccountDetails,
+  generateOTP,
+  verifyOTP,
+  refreshAccessToken,
 };
