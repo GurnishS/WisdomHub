@@ -7,14 +7,13 @@ const Modal = ({ modalOpen = false, setModalOpen }) => {
   const [uploadType, setUploadType] = useState("Book");
   const [loading, setLoading] = useState(false);
 
-  // useEffect(() => {
-  //   // Set overflow hidden when loading
-  //   if (loading) {
-  //     document.body.style.overflow = "hidden";
-  //   } else {
-  //     document.body.style.overflow = "auto";
-  //   }
-  // }, [loading]);
+  useEffect(() => {
+    if (modalOpen) {
+      handleOpen();
+    } else {
+      handleClose();
+    }
+  }, [modalOpen]);
 
   const handleClose = () => {
     const modal = document.getElementById("modal-upload-form");
@@ -72,10 +71,9 @@ const Modal = ({ modalOpen = false, setModalOpen }) => {
         body: formData,
       });
 
-      const data = response.json();
-      console.log("Data", data);
+      const data = await response.json();
       setLoading(false);
-      store.addMessage({ type: "Success", content: response.data.message });
+      store.addMessage({ type: "Success", content: data.message });
       if (!response.ok) {
         store.addMessage({
           type: "Danger",
@@ -87,16 +85,8 @@ const Modal = ({ modalOpen = false, setModalOpen }) => {
     } catch (error) {
       setLoading(false);
       store.addMessage({ type: "Danger", content: error.message });
-
-      // Handle error (e.g., show error message to the user)
     }
   };
-
-  useEffect(() => {
-    if (modalOpen === true) {
-      handleOpen();
-    }
-  }, [modalOpen]);
 
   return (
     <>
@@ -114,7 +104,7 @@ const Modal = ({ modalOpen = false, setModalOpen }) => {
           <div className="relative p-4 w-full max-w-xl max-h-full m-auto">
             <div className="relative bg-white rounded-lg shadow">
               <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t">
-                <h3 className="text-xl font-semibold text-gray-900 ">Upload</h3>
+                <h3 className="text-xl font-semibold text-gray-900">Upload</h3>
                 <button
                   type="button"
                   onClick={handleClose}
@@ -142,7 +132,7 @@ const Modal = ({ modalOpen = false, setModalOpen }) => {
                 <form onSubmit={handleSubmit}>
                   <div className="space-y-12">
                     <div className="border-b border-gray-900/10 pb-12">
-                      <div className=" grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                      <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                         <div className="sm:col-span-4">
                           <label
                             htmlFor="file"
@@ -211,148 +201,185 @@ const Modal = ({ modalOpen = false, setModalOpen }) => {
                           </div>
                         </div>
 
-                        {uploadType === "Book" ? (
-                          <div className="sm:col-span-3">
-                            <label
-                              htmlFor="author"
-                              className="block text-sm font-medium leading-6 text-gray-900"
-                            >
-                              Author
-                            </label>
-                            <div className="mt-2">
-                              <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
-                                <input
-                                  type="text"
-                                  name="author"
-                                  id="author"
-                                  autoComplete="Author"
-                                  className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
-                                  placeholder="Author"
-                                  required
-                                />
+                        {uploadType === "Book" && (
+                          <>
+                            <div className="sm:col-span-3">
+                              <label
+                                htmlFor="author"
+                                className="block text-sm font-medium leading-6 text-gray-900"
+                              >
+                                Author
+                              </label>
+                              <div className="mt-2">
+                                <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+                                  <input
+                                    type="text"
+                                    name="author"
+                                    id="author"
+                                    autoComplete="Author"
+                                    className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                                    placeholder="Author"
+                                    required
+                                  />
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ) : null}
+                            <div className="sm:col-span-3">
+                              <label
+                                htmlFor="publisher"
+                                className="block text-sm font-medium leading-6 text-gray-900"
+                              >
+                                Publisher
+                              </label>
+                              <div className="mt-2">
+                                <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+                                  <input
+                                    type="text"
+                                    name="publisher"
+                                    id="publisher"
+                                    autoComplete="Publisher"
+                                    className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                                    placeholder="Publisher"
+                                    required
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
 
-                        {uploadType === "Book" ? (
-                          <div className="sm:col-span-3">
-                            <label
-                              htmlFor="publisher"
-                              className="block text-sm font-medium leading-6 text-gray-900"
-                            >
-                              Publisher
-                            </label>
-                            <div className="mt-2">
-                              <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
-                                <input
-                                  type="text"
-                                  name="publisher"
-                                  id="publisher"
-                                  autoComplete="Publisher"
-                                  className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
-                                  placeholder="Publisher"
-                                  required
-                                />
+                        {uploadType === "Question Paper" && (
+                          <>
+                            <div className="sm:col-span-3">
+                              <label
+                                htmlFor="subject"
+                                className="block text-sm font-medium leading-6 text-gray-900"
+                              >
+                                Subject
+                              </label>
+                              <div className="mt-2">
+                                <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+                                  <input
+                                    type="text"
+                                    name="subject"
+                                    id="subject"
+                                    autoComplete="Subject"
+                                    className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                                    placeholder="Subject"
+                                    required
+                                  />
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ) : null}
-                        {uploadType === "Question Paper" ||
-                        uploadType === "Study Material" ? (
-                          <div className="sm:col-span-3">
-                            <label
-                              htmlFor="subject"
-                              className="block text-sm font-medium leading-6 text-gray-900"
-                            >
-                              Subject
-                            </label>
-                            <div className="mt-2">
-                              <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
-                                <input
-                                  type="text"
-                                  name="subject"
-                                  id="subject"
-                                  autoComplete="Subject"
-                                  className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
-                                  placeholder="Subject"
-                                  required
-                                />
+                            <div className="sm:col-span-3">
+                              <label
+                                htmlFor="institute"
+                                className="block text-sm font-medium leading-6 text-gray-900"
+                              >
+                                Institute
+                              </label>
+                              <div className="mt-2">
+                                <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+                                  <input
+                                    type="text"
+                                    name="institute"
+                                    id="institute"
+                                    autoComplete="Institute"
+                                    className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                                    placeholder="Institute"
+                                    required
+                                  />
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ) : null}
+                            <div className="sm:col-span-3">
+                              <label
+                                htmlFor="year"
+                                className="block text-sm font-medium leading-6 text-gray-900"
+                              >
+                                Year
+                              </label>
+                              <div className="mt-2">
+                                <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+                                  <input
+                                    type="text"
+                                    name="year"
+                                    id="year"
+                                    autoComplete="Year"
+                                    className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                                    placeholder="Year"
+                                    required
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        )}
 
-                        {uploadType === "Question Paper" ||
-                        uploadType === "Study Material" ? (
-                          <div className="sm:col-span-3">
-                            <label
-                              htmlFor="institute"
-                              className="block text-sm font-medium leading-6 text-gray-900"
-                            >
-                              Institute
-                            </label>
-                            <div className="mt-2">
-                              <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
-                                <input
-                                  type="text"
-                                  name="institute"
-                                  id="institute"
-                                  autoComplete="Institute"
-                                  className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
-                                  placeholder="Institute"
-                                  required
-                                />
+                        {uploadType === "Study Material" && (
+                          <>
+                            <div className="sm:col-span-3">
+                              <label
+                                htmlFor="subject"
+                                className="block text-sm font-medium leading-6 text-gray-900"
+                              >
+                                Subject
+                              </label>
+                              <div className="mt-2">
+                                <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+                                  <input
+                                    type="text"
+                                    name="subject"
+                                    id="subject"
+                                    autoComplete="Subject"
+                                    className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                                    placeholder="Subject"
+                                    required
+                                  />
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ) : null}
-                        {uploadType === "Question Paper" ? (
-                          <div className="sm:col-span-2">
-                            <label
-                              htmlFor="year"
-                              className="block text-sm font-medium leading-6 text-gray-900"
-                            >
-                              Year
-                            </label>
-                            <div className="mt-2">
-                              <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
-                                <input
-                                  type="year"
-                                  name="year"
-                                  id="year"
-                                  autoComplete="Year of Exam"
-                                  className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
-                                  placeholder="Year of Exam"
-                                  required
-                                />
+                            <div className="sm:col-span-3">
+                              <label
+                                htmlFor="institute"
+                                className="block text-sm font-medium leading-6 text-gray-900"
+                              >
+                                Institute
+                              </label>
+                              <div className="mt-2">
+                                <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+                                  <input
+                                    type="text"
+                                    name="institute"
+                                    id="institute"
+                                    autoComplete="Institute"
+                                    className="block flex-1 border-0 bg-transparent py-1.5 pl-1 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                                    placeholder="Institute"
+                                    required
+                                  />
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ) : null}
-
-                        {uploadType === "Study Material" ? (
-                          <div className="col-span-full">
-                            <label
-                              htmlFor="about"
-                              className="block text-sm font-medium leading-6 text-gray-900"
-                            >
-                              About
-                            </label>
-                            <div className="mt-2">
-                              <textarea
-                                id="about"
-                                name="about"
-                                rows={3}
-                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                defaultValue={""}
-                              />
+                            <div className="sm:col-span-6">
+                              <label
+                                htmlFor="about"
+                                className="block text-sm font-medium leading-6 text-gray-900"
+                              >
+                                About the Material
+                              </label>
+                              <div className="mt-2">
+                                <textarea
+                                  id="about"
+                                  name="about"
+                                  rows="3"
+                                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                  placeholder="About the Material"
+                                  required
+                                ></textarea>
+                              </div>
                             </div>
-                            <p className="mt-3 text-sm leading-6 text-gray-600">
-                              Write a short description about Study Material.
-                            </p>
-                          </div>
-                        ) : null}
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
