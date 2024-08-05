@@ -49,6 +49,8 @@ export const googleLoginCallback = (req, res, next) => {
       const refreshToken = userData.generateRefreshToken();
       user.accessToken = accessToken;
       user.refreshToken = refreshToken;
+      userData.refreshToken = refreshToken;
+      await userData.save({ validateBeforeSave: false });
       user.userId = userData._id;
       res.redirect(`http://localhost:5173/login?token=${tempToken}`);
     }

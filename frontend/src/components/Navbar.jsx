@@ -43,6 +43,7 @@ export default function Example({ currentPage, setCurrentPage }) {
   const logout = () => {
     ApiHandler("users/logout", "POST").then((data) => {
       sessionStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
       window.location.href = "/login";
       // Update user state with fetched data
     });

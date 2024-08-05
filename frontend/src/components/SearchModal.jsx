@@ -28,6 +28,9 @@ const Modal = ({ modalOpenSearch = false, setModalOpenSearch }) => {
 
   const handleChange = (e) => {
     const keyword = e.target.value;
+    if (keyword.length < 3) {
+      return;
+    }
     const payload = { keyword };
     setResults([]);
     setLoading(true);

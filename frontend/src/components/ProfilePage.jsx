@@ -6,7 +6,7 @@ import { useParams } from "react-router-dom";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import ProfileEditForm from "./ProfileEditForm";
-import {ApiHandler } from "../utils/ApiHandler";
+import { ApiHandler } from "../utils/ApiHandler";
 
 const Profile = () => {
   const [user, setUser] = useState(null); // State to hold user data
@@ -33,7 +33,7 @@ const Profile = () => {
     // } catch (err) {
     //   store.addMessage({ type: "Danger", content: err.message });
     // }
-    ApiHandler("users/follow" + user._id, "POST", {}, false).then((data) => {
+    ApiHandler("users/follow/" + user._id, "POST", {}, false).then((data) => {
       user.isFollowing = true;
       user.followerCount = user.followerCount + 1;
       setUser({ ...user });
