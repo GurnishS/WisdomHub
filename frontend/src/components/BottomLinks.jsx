@@ -54,15 +54,15 @@ const LinksSection = () => {
         <ul className="text-gray-500 dark:text-gray-400 font-medium">
           <li className="mb-4">
             <a
-              href="https://github.com/themesberg/flowbite"
+              href="https://github.com/GurnishS/WisdomHub"
               className="hover:underline "
             >
               Github
             </a>
           </li>
           <li>
-            <a href="https://discord.gg/4eeurUVvTy" className="hover:underline">
-              Discord
+            <a href="https://www.linkedin.com/in/gurnish-singh-sangha-16b19428b/" className="hover:underline">
+              LinkedIn
             </a>
           </li>
         </ul>

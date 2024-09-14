@@ -124,6 +124,7 @@ const Modal = ({ modalOpen = false, setModalOpen, userProfile }) => {
       const formDataToSend = new FormData();
       if(formData.avatar)formDataToSend.append("avatar", formData.avatar);
       else formDataToSend.append("avatar", null);
+      console.log(formData.avatar);
       formDataToSend.append("username", formData.username);
       formDataToSend.append("fullName", formData.fullName);
       formDataToSend.append("email", formData.email);
@@ -146,7 +147,7 @@ const Modal = ({ modalOpen = false, setModalOpen, userProfile }) => {
       const data = await response.json();
       store.addMessage({ type: "Success", content: data.message });
       handleClose();
-      window.location.reload();
+      // window.location.reload();
     } catch (error) {
       console.error("Error:", error);
       store.addMessage({ type: "Danger", content: error.message });

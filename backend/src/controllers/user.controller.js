@@ -245,6 +245,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
   const { fullName, email, username, role, institute } = req.body;
   const avatarLocalPath = req.files?.avatar[0]?.path;
   console.log(avatarLocalPath);
+  console.log(fullName, email, username, role, institute);
   // Check if any required fields are empty
   if (
     [fullName, email, username, institute, role].some(
