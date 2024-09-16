@@ -1,0 +1,41 @@
+name: Deploy to Render
+
+# Specify when to trigger the workflow, in this case, on push to main branch
+on:
+  push:
+    branches:
+      - main
+
+# Define the jobs that will be executed
+jobs:
+  deploy:
+    # The OS that will be used for the runner
+    runs-on: ubuntu-latest
+
+    steps:
+    # Check out the code from the repository
+    - uses: actions/checkout@v2
+
+    # Frontend deployment
+    - name: Install Frontend Dependencies
+      run: |
+        cd frontend  # Navigate to your frontend folder
+        npm install
+
+    - name: Build Frontend
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Deploy Frontend to Render
+      env:
+        RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      run: |
+        curl -X POST https://api.render.com/deploy/srv-cq72b5g8fa8c7382qkc0?key=${{ secrets.RENDER_API_KEY }}
+
+    # Backend deployment
+    - name: Deploy Backend to Render
+      env:
+        RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      run: |
+        curl -X POST https://api.render.com/deploy/srv-cr9nf6d6l47c73cqkt8g?key=${{ secrets.RENDER_API_KEY }}
