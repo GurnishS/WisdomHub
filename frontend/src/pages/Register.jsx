@@ -27,7 +27,7 @@ export default function SignUp({ user: user }) {
   );
 
   useEffect(() => {
-    if (user.isVerified) {
+    if (user?.isVerified) {
       navigate("/dashboard");
     }
   }, []);
