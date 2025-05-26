@@ -13,5 +13,7 @@ COPY . .
 # Install the Node.js dependencies
 RUN npm install
 
+RUN npm install -g pm2
+
 # Specify the command to run your application
-CMD ["npm","run","dev"]
+CMD ["pm2", "start", "src/index.js", "--node-args=-r dotenv/config --experimental-json-modules"]
