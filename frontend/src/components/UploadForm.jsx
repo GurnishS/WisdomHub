@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Loading from "./Loading";
 import config from "../config";
 import store from "../store";
+import {getAuth} from "firebase/auth";
 
 const Modal = ({ modalOpen = false, setModalOpen }) => {
   const [uploadType, setUploadType] = useState("Book");
@@ -44,7 +45,7 @@ const Modal = ({ modalOpen = false, setModalOpen }) => {
       const form = e.target;
       const formData = new FormData();
       formData.append("title", form.title.value);
-      let endpoint = config.apiUrl + "files/";
+      let endpoint = config.apiUrl+"files/";
       if (uploadType === "Book") {
         formData.append("book", form.file.files[0]);
         endpoint += "upload-book";
@@ -63,10 +64,32 @@ const Modal = ({ modalOpen = false, setModalOpen }) => {
         formData.append("institute", form.institute.value);
         formData.append("description", form.about.value);
       }
+
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (!user) {
+        store.addMessage({
+          type: "Danger",
+          content: "User not logged in, please login",
+        });
+        window.location.href = "/login";
+        return;
+      }
+      const accessToken = await user.getIdToken();
+      if (!accessToken) {
+        store.addMessage({
+          type: "Danger",
+          content: "Access token not found, please login",
+        });
+        window.location.href = "/login";
+        return;
+      }
+
+      
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: formData,
       });

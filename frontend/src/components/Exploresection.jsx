@@ -1,7 +1,7 @@
 import List from "./List";
 import { useState, useEffect } from "react";
 import { SimpleApiHandler } from "../utils/ApiHandler.js";
-export default function Exploresection({ setCurrentPage }) {
+export default function Exploresection() {
   const [books, setBooks] = useState([]);
   const [questionPapers, setQuestionPapers] = useState([]);
   const [studyMaterials, setStudyMaterials] = useState([]);
@@ -31,14 +31,17 @@ export default function Exploresection({ setCurrentPage }) {
     <>
       <List
         heading="Question Papers"
+        link="/question-papers"
         items={questionPapers}
-        setCurrentPage={setCurrentPage}
       />
-      <List heading="Books" items={books} setCurrentPage={setCurrentPage} />
+      <List
+        heading="Books"
+        link="/books"
+        items={books} />
       <List
         heading="Study Materials"
+        link="/study-materials"
         items={studyMaterials}
-        setCurrentPage={setCurrentPage}
       />
     </>
   );

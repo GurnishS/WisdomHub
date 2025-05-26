@@ -30,11 +30,13 @@ const uploadBook = asyncHandler(async (req, res, file) => {
     const thumbLocalPath = await convertPdfPageToImage(bookLocalPath);
     const book = await uploadOnCloudinary(thumbLocalPath);
     const pdfLink = await drive(title, bookLocalPath);
+    console.log("User:", req.user);
+    console.log("test:", req.user.uid);
     const bookObject = await Book.create({
       title,
       author,
       publisher,
-      uploadedBy: req.user._id,
+      uploadedBy: req.user.uid,
       pdfLink: pdfLink,
       thumbLink: book.secure_url,
     });
@@ -47,6 +49,7 @@ const uploadBook = asyncHandler(async (req, res, file) => {
       .status(201)
       .json(new ApiResponse(200, createdBook, "Book uploaded successfully"));
   } catch (error) {
+    console.error(error);
     throw new ApiError(500, "Something went wrong while uploading Book");
   }
 });
@@ -73,7 +76,7 @@ const uploadQuestionPaper = asyncHandler(async (req, res, file) => {
       institute,
       yearOfExam,
       subject,
-      uploadedBy: req.user._id,
+      uploadedBy: req.user.uid,
       pdfLink: pdfLink,
       thumbLink: questionPaper.secure_url,
     });
@@ -93,6 +96,7 @@ const uploadQuestionPaper = asyncHandler(async (req, res, file) => {
         )
       );
   } catch (error) {
+    console.error(error);
     throw new ApiError(
       500,
       "Something went wrong while uploading Question Paper"
@@ -124,7 +128,7 @@ const uploadStudyMaterial = asyncHandler(async (req, res, file) => {
       institute,
       subject,
       description,
-      uploadedBy: req.user._id,
+      uploadedBy: req.user.uid,
       pdfLink: pdfLink,
       thumbLink: studyMaterial.secure_url,
     });
@@ -144,6 +148,7 @@ const uploadStudyMaterial = asyncHandler(async (req, res, file) => {
         )
       );
   } catch (error) {
+    console.error(error);
     throw new ApiError(500, "Something went wrong while uploading PDF");
   }
 });
@@ -174,10 +179,10 @@ const likeItem = asyncHandler((req, res) => {
       if (!item) {
         throw new ApiError(404, "Item not found");
       }
-      if (item.likes.includes(user._id)) {
-        item.likes.pull(user._id);
+      if (item.likes.includes(user.uid)) {
+        item.likes.pull(user.uid);
       } else {
-        item.likes.push(user._id);
+        item.likes.push(user.uid);
       }
       return item.save();
     })
@@ -232,14 +237,18 @@ const getBooks = asyncHandler(async (req, res) => {
     // Extract all unique user IDs from books
     const userIds = [...new Set(books.map((book) => book.uploadedBy))];
     // Fetch all users corresponding to the userIds and select only username and avatar
-    const users = await User.find({ _id: { $in: userIds } }).select(
-      "username avatar fullName"
+    console.log("User IDs:", userIds);
+    const users = await User.find({ uid: { $in: userIds } }).select(
+      "username avatar fullName uid"
     );
+    console.log("Users:", users);
     // Map users to a map for quick lookup
     const userMap = users.reduce((acc, user) => {
-      acc[user._id] = user;
+      acc[user.uid] = user;
       return acc;
     }, {});
+
+    console.log("User Map:", userMap);
     // Map each book to include the corresponding user's username and avatar
     const booksWithUsers = books.map((book) => ({
       ...book.toObject(),
@@ -254,6 +263,7 @@ const getBooks = asyncHandler(async (req, res) => {
       .status(200)
       .json(new ApiResponse(200, booksWithUsers, "Successfully fetched books"));
   } catch (error) {
+    console.error("Error in getBooks:", error);
     throw new ApiError(500, "Something went wrong while fetching books");
   }
 });
@@ -269,13 +279,13 @@ const getStudyMaterial = asyncHandler(async (req, res) => {
     ];
 
     // Fetch all users corresponding to the userIds and select only necessary fields
-    const users = await User.find({ _id: { $in: userIds } }).select(
-      "username avatar fullName"
+    const users = await User.find({ uid: { $in: userIds } }).select(
+      "username avatar fullName uid"
     );
 
     // Map users to a map for quick lookup
     const userMap = users.reduce((acc, user) => {
-      acc[user._id] = user;
+      acc[user.uid] = user;
       return acc;
     }, {});
 
@@ -317,13 +327,13 @@ const getQuestionPaper = asyncHandler(async (req, res) => {
     ];
 
     // Fetch all users corresponding to the userIds and select only username and avatar
-    const users = await User.find({ _id: { $in: userIds } }).select(
-      "username avatar fullName"
+    const users = await User.find({ uid: { $in: userIds } }).select(
+      "username avatar fullName uid"
     );
 
     // Map users to a map for quick lookup
     const userMap = users.reduce((acc, user) => {
-      acc[user._id] = user;
+      acc[user.uid] = user;
       return acc;
     }, {});
 

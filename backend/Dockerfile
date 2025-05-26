@@ -1,5 +1,5 @@
 # Use the official Node.js image as the base
-FROM node:20-slim
+FROM node:latest
 
 # Install dependencies like poppler-utils
 RUN apt-get update && apt-get install -y poppler-utils

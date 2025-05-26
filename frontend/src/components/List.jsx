@@ -1,6 +1,8 @@
 import ItemContainer from "./ItemContainer";
+import {useNavigate} from "react-router-dom";
 
-export default function Example({ heading, items, setCurrentPage }) {
+export default function Example({ heading,link, items}) {
+  const navigate = useNavigate();
   return (
     <div className="bg-white">
       <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6  lg:max-w-7xl lg:px-8">
@@ -10,7 +12,7 @@ export default function Example({ heading, items, setCurrentPage }) {
           </h2>
           <button
             type="button"
-            onClick={() => setCurrentPage(heading)}
+            onClick={()=> navigate(link)}
             className="inline-flex items-center rounded-md px-3 py-2 text-lg  text-blue-900 hover:text-blue-300"
           >
             More items

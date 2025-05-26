@@ -1,7 +1,7 @@
 import { CalendarDaysIcon, HandRaisedIcon } from "@heroicons/react/24/outline";
-import Footer from "./BottomLinks";
+import BottomLinks from "./BottomLinks";
 
-export default function Example() {
+export default function Footer() {
   return (
     <div className="relative isolate overflow-hidden bg-gray-900 py-16 sm:py-24 lg:py-35">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -75,7 +75,7 @@ export default function Example() {
           }}
         />
       </div>
-      <Footer />
+      <BottomLinks />
     </div>
   );
 }

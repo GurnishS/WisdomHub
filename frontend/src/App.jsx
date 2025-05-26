@@ -1,11 +1,12 @@
 // src/App.jsx
 import React from "react";
-import Router from "./components/Router.jsx";
+import Router from "./pages/Router.jsx";
 import NotificationArea from "./components/NotificationArea.jsx";
+
 function App() {
   return (
     <div className="App">
-      <Router />
+      <Router/>
       <NotificationArea />
     </div>
   );

@@ -139,6 +139,7 @@ const Modal = ({ modalOpenSearch = false, setModalOpenSearch }) => {
                   )}
                   {results.map((result) => (
                     <div
+                      key={result?._id}
                       className="flex items-center justify-between w-full p-4 bg-gray-100 rounded-lg my-2 cursor-pointer"
                       onClick={() => {
                         window.location.href = "/user/" + result.username;
