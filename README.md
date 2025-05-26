@@ -43,7 +43,7 @@ WisdomHub is a platform where students and educators can share and access books,
 
 ## **Website**
 
-Access the live application at [WisdomHub](https://wisdomhub.onrender.com/)
+Access the live application at [WisdomHub](https://wisdom-hub.onrender.com/)
 
 ---
 
