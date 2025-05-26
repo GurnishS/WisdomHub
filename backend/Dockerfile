@@ -13,7 +13,11 @@ COPY . .
 # Install the Node.js dependencies
 RUN npm install
 
+# Install pm2 globally
 RUN npm install -g pm2
 
-# Specify the command to run your application
-CMD ["pm2", "start", "src/index.js", "--node-args=-r dotenv/config --experimental-json-modules"]
+# Expose the port your app listens on
+EXPOSE 8000
+
+# Specify the command to run your application with pm2 in foreground
+CMD ["pm2", "start", "src/index.js", "--node-args=-r dotenv/config --experimental-json-modules", "--no-daemon"]
