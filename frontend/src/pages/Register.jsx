@@ -6,10 +6,11 @@ import Loading from "../components/Loading.jsx";
 import config from "../config.js";
 import store from "../store.js";
 import { ApiHandler, SimpleApiHandler } from "../utils/ApiHandler.js";
+import {GoogleAuthProvider,signInWithPopup } from "firebase/auth";
+
 import {
   createUserWithEmailAndPassword,
   getAuth,
-  sendEmailVerification,
   updateProfile,
 } from "firebase/auth";
 import auth from "../utils/firebase.js";
@@ -22,9 +23,6 @@ export default function SignUp({ user: user }) {
   const [typingTimeout, setTypingTimeout] = useState(null);
   const [isFocused, setIsFocused] = useState(false);
   const [load, setLoad] = useState(false);
-  const [isPasswordRegister, setIsPasswordRegister] = useState(
-    user ? false : true
-  );
 
   useEffect(() => {
     if (user?.isVerified) {
@@ -49,7 +47,12 @@ export default function SignUp({ user: user }) {
         }
       })
       .catch((err) => {
+        console.error("Error checking username:", err);
         setCheckUsernameState("Xmark");
+        store.addMessage({
+          type: "error",
+          message: "Failed to check username availability. Please try again.",
+        });
       });
   };
 
@@ -63,6 +66,8 @@ export default function SignUp({ user: user }) {
     uid: "",
   });
 
+  const provider = new GoogleAuthProvider();
+
   function signInWithGooglePopup() {
     signInWithPopup(auth, provider)
       .then((result) => {
@@ -71,9 +76,6 @@ export default function SignUp({ user: user }) {
         const token = credential.accessToken;
         // The signed-in user info.
         const user = result.user;
-        if (!user.emailVerified) {
-          throw new Error("Email not Verified");
-        }
 
         // Handle successful sign-in (e.g., redirect to dashboard, update UI)
         console.log("Successfully signed in with Google (Popup)!", user);
@@ -82,7 +84,7 @@ export default function SignUp({ user: user }) {
           message: "User logged in successfully",
         });
 
-        navigate("/register");
+        navigate("/dashboard");
       })
       .catch((error) => {
         // Handle errors
@@ -94,9 +96,30 @@ export default function SignUp({ user: user }) {
         const credential = GoogleAuthProvider.credentialFromError(error);
 
         console.error("Error during Google sign-in (Popup):", errorMessage);
+        
+        // Handle specific Google sign-in errors with user-friendly messages
+        let userFriendlyMessage = errorMessage;
+        
+        switch (errorCode) {
+          case 'auth/popup-closed-by-user':
+            userFriendlyMessage = 'Sign-up was cancelled. Please try again.';
+            break;
+          case 'auth/popup-blocked':
+            userFriendlyMessage = 'Popup was blocked by your browser. Please allow popups and try again.';
+            break;
+          case 'auth/account-exists-with-different-credential':
+            userFriendlyMessage = 'An account with that email already exists with a different sign-in method. Please use that method instead.';
+            break;
+          case 'auth/invalid-credential':
+            userFriendlyMessage = 'Google sign-up failed. Please try again.';
+            break;
+          default:
+            userFriendlyMessage = 'Google sign-up failed. Please try again.';
+        }
+        
         store.addMessage({
           type: "error",
-          message: errorMessage,
+          message: userFriendlyMessage,
         });
 
         // Handle specific error codes (e.g., auth/account-exists-with-different-credential)
@@ -125,14 +148,24 @@ export default function SignUp({ user: user }) {
   const handleNext = async (e) => {
     e.preventDefault();
     setLoad(true);
-    formData.fullName = e.target.fullName.value;
-    formData.email = e.target.email.value;
-    formData.password = e.target.password.value;
-    setFormData((prevData) => ({
-      ...prevData,
-    }));
-    setAuthenticated(true);
-    setLoad(false);
+    
+    try {
+      formData.fullName = e.target.fullName.value;
+      formData.email = e.target.email.value;
+      formData.password = e.target.password.value;
+      setFormData((prevData) => ({
+        ...prevData,
+      }));
+      setAuthenticated(true);
+    } catch (error) {
+      console.error('Error in form validation:', error);
+      store.addMessage({
+        type: "error",
+        message: "Please check your form data and try again.",
+      });
+    } finally {
+      setLoad(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -188,24 +221,56 @@ export default function SignUp({ user: user }) {
               displayName: data.data.fullName,
               photoURL: data.data.avatar,
             });
-            if (isPasswordRegister) {
-              await sendEmailVerification(user);
-            }
             setSubmitted(true);
-            store.addMessage({ type: "Success", content: data.message });
+            store.addMessage({ 
+              type: "success", 
+              message: data.message || "Registration successful! You can now login." 
+            });
             navigate("/login");
           } else {
-            throw new Error(data.message);
+            throw new Error(data.message || "Registration failed");
           }
         })
         .catch((err) => {
-          store.addMessage({ type: "Danger", content: err.message });
+          store.addMessage({ 
+            type: "error", 
+            message: err.message || "Registration failed. Please try again." 
+          });
         })
         .finally(() => {
           setLoad(false);
         });
     } catch (error) {
       console.error("Error signing up:", error);
+      setLoad(false);
+      
+      // Handle specific Firebase auth errors with user-friendly messages
+      let errorMessage = error.message;
+      
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          errorMessage = 'An account with this email already exists. Please use a different email or sign in.';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Please enter a valid email address.';
+          break;
+        case 'auth/weak-password':
+          errorMessage = 'Password is too weak. Please use a stronger password with at least 8 characters, including uppercase, lowercase, numbers, and special characters.';
+          break;
+        case 'auth/operation-not-allowed':
+          errorMessage = 'Email/password accounts are not enabled. Please contact support.';
+          break;
+        case 'auth/network-request-failed':
+          errorMessage = 'Network error. Please check your internet connection and try again.';
+          break;
+        default:
+          errorMessage = 'Registration failed. Please try again.';
+      }
+      
+      store.addMessage({
+        type: "error",
+        message: errorMessage,
+      });
     }
   };
 
@@ -220,16 +285,16 @@ export default function SignUp({ user: user }) {
           {load && <Loading />}
           <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
             <h2 className="text-2xl font-semibold mb-4 text-gray-900">
-              Verification Link Sent
+              Registration Successful
             </h2>
             <p className="text-gray-700 mb-6">
-              A verification link has been sent successfully to your email.
+              Your account has been created successfully! You can now login with your credentials.
             </p>
             <button
               onClick={handleContinue}
               className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition"
             >
-              Continue
+              Continue to Login
             </button>
           </div>
         </div>
@@ -650,6 +715,9 @@ export default function SignUp({ user: user }) {
                         title="Password must contain at least one numeral, one special symbol, one uppercase letter, and be at least 8 characters long"
                         required
                       ></input>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Password must contain at least 8 characters, including one uppercase letter, one number, and one special character.
+                      </p>
                     </div>
                   </div>
                   <div>

@@ -13,6 +13,7 @@ export default function SignIn() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setLoading(true);
     const email = event.target.email.value;
     const password = event.target.password.value;
 
@@ -20,6 +21,11 @@ export default function SignIn() {
       // Attempt to sign in user with email and password
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+
+      if(!user) {
+        throw new Error("User not found");
+      }
+
       console.log('User logged in successfully:', user);
       store.addMessage({
         type: "success",
@@ -28,17 +34,43 @@ export default function SignIn() {
       navigate("/dashboard");
     } catch (error) {
       console.error('Error logging in user:', error.code, error.message);
+      
+      // Handle specific Firebase auth errors with user-friendly messages
+      let errorMessage = error.message;
+      
+      switch (error.code) {
+        case 'auth/invalid-credential':
+          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+          break;
+        case 'auth/user-not-found':
+          errorMessage = 'No account found with this email address.';
+          break;
+        case 'auth/wrong-password':
+          errorMessage = 'Incorrect password. Please try again.';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Please enter a valid email address.';
+          break;
+        case 'auth/user-disabled':
+          errorMessage = 'This account has been disabled. Please contact support.';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Too many failed login attempts. Please try again later.';
+          break;
+        default:
+          errorMessage = 'Login failed. Please try again.';
+      }
+      
       store.addMessage({
         type: "error",
-        message: error.message,
+        message: errorMessage,
       });
+    } finally {
+      setLoading(false);
     }
   }
 
   const provider = new GoogleAuthProvider();
-
-  // You can optionally add scope requests here, e.g., to get user info
-  // provider.addScope('https://www.googleapis.com/auth/contacts.readonly');
 
   function signInWithGooglePopup() {
     signInWithPopup(auth, provider)
@@ -48,10 +80,7 @@ export default function SignIn() {
         const token = credential.accessToken;
         // The signed-in user info.
         const user = result.user;
-        if(!user.emailVerified){
-          throw new Error("Email not Verified");
-        }
-
+        
         // Handle successful sign-in (e.g., redirect to dashboard, update UI)
         console.log("Successfully signed in with Google (Popup)!", user);
         store.addMessage({
@@ -59,7 +88,7 @@ export default function SignIn() {
           message: "User logged in successfully",
         });
 
-        navigate("/register");
+        navigate("/dashboard");
 
       }).catch((error) => {
         // Handle errors
@@ -71,17 +100,34 @@ export default function SignIn() {
         const credential = GoogleAuthProvider.credentialFromError(error);
 
         console.error("Error during Google sign-in (Popup):", errorMessage);
+        
+        // Handle specific Google sign-in errors with user-friendly messages
+        let userFriendlyMessage = errorMessage;
+        
+        switch (errorCode) {
+          case 'auth/popup-closed-by-user':
+            userFriendlyMessage = 'Sign-in was cancelled. Please try again.';
+            break;
+          case 'auth/popup-blocked':
+            userFriendlyMessage = 'Popup was blocked by your browser. Please allow popups and try again.';
+            break;
+          case 'auth/account-exists-with-different-credential':
+            userFriendlyMessage = 'An account with that email already exists with a different sign-in method. Please use that method instead.';
+            break;
+          case 'auth/invalid-credential':
+            userFriendlyMessage = 'Google sign-in failed. Please try again.';
+            break;
+          default:
+            userFriendlyMessage = 'Google sign-in failed. Please try again.';
+        }
+        
         store.addMessage({
           type: "error",
-          message: errorMessage,
+          message: userFriendlyMessage,
         });
 
-
-        // Handle specific error codes (e.g., auth/account-exists-with-different-credential)
-        // by linking the accounts.
         if (errorCode === 'auth/account-exists-with-different-credential') {
           alert('An account with that email already exists with a different sign-in method. Sign in with that method instead.');
-          // You might want to prompt the user to sign in with the existing method
         }
       });
   }

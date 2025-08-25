@@ -24,13 +24,14 @@ export default function NotificationArea() {
   return (
     <div className="fixed bottom-0 mb-12 w-full items-center z-50">
       {messages.map((message, index) => {
-        switch (message.type) {
-          case "Success":
-            return <SuccessToast key={index} message={message.content} />;
-          case "Warning":
-            return <WarningToast key={index} message={message.content} />;
-          case "Danger":
-            return <DangerToast key={index} message={message.content} />;
+        switch (message.type.toLowerCase()) {
+          case "success":
+            return <SuccessToast key={index} message={message.message} />;
+          case "warning":
+            return <WarningToast key={index} message={message.message} />;
+          case "error":
+          case "danger":
+            return <DangerToast key={index} message={message.message} />;
           default:
             return null;
         }

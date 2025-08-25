@@ -25,11 +25,6 @@ const token = authHeader && authHeader.split(' ')[1];
       throw new ApiError(401, "Invalid token");
     }
 
-    if (!decodedToken.email_verified) {
-      throw new ApiError(401, "Email not verified");
-    }
-
-    // IMPORTANT: Await this!
     const user = await auth.getUser(decodedToken.uid);
 
     if (!user) {
