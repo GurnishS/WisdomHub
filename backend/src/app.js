@@ -2,9 +2,26 @@ import express from "express";
 import cors from "cors";
 const app = express();
 
+const allowedOrigins = (
+  process.env.CORS_ORIGINS ??
+  process.env.CORS_ORIGIN ??
+  ""
+)
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.length === 0) return callback(null, true);
+      if (allowedOrigins.includes("*")) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("CORS policy: Origin not allowed"));
+    },
     credentials: true,
   })
 );
@@ -16,3 +33,4 @@ import fileRouter from "./routes/file.routes.js";
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/files", fileRouter);
 export default app;
+
