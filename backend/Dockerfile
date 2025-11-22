@@ -1,5 +1,5 @@
 # Use the official Node.js image as the base
-FROM node:latest
+FROM node:18
 
 # Install dependencies like poppler-utils
 RUN apt-get update && apt-get install -y poppler-utils
@@ -21,3 +21,4 @@ EXPOSE 8000
 
 # Specify the command to run your application with pm2 in foreground
 CMD ["pm2", "start", "src/index.js", "--node-args=-r dotenv/config --experimental-json-modules", "--no-daemon"]
+
